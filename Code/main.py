@@ -329,13 +329,43 @@ def do_it_all():
             file.write("the average non-canonical log-likelihood is " + str(avg_non_canonical_likelihood) + ", and the average canonical log-likeliood is " + str(avg_canonical_likelihood) + "\n")
             file.write("=================================================================\n\n\n")
 
+def find_non_canonicals():
+    output_file = "noncanons-1-15-try3.txt"
+
+    model = AutoModelForCausalLM.from_pretrained("gpt2").to("cuda")
+
+    device = torch.device("cuda:0")
+    tokenizer.pad_token = tokenizer.eos_token
+
+    for i in range(5):
+        actual_tokens = sample_tokens(1, 500, 500)
+        non_canonical_text = tokenizer.batch_decode(actual_tokens)
+        canonical_tokens = tokenizer(
+            non_canonical_text, 
+            padding=True, 
+            truncation=True,
+            return_tensors='pt')["input_ids"].to(device)
+        
+        for k in range(5):
+            canon_bool = check_canonicity_one(actual_tokens[k], canonical_tokens[k])
+            if not canon_bool:
+                uncanons_output = uncanons(actual_tokens[k], canonical_tokens[k])
+
+                with open(output_file, 'a') as file:
+                    for position, token_pairs in uncanons_output.items():
+                        for non_canon, canon in token_pairs:
+                            file.write("Non-canonical: " + str(non_canon) + ", canonical: " + str(canon) + "\n")
+                    file.write("=================================================================\n\n")
+                    file.write("Text:\n" + str(non_canonical_text[k]) + "\n\n")
+                    file.write("=================================================================\n\n\n")
+                    file.write("=================================================================\n\n\n")
+
+
 def main():
     start_time = datetime.now() 
 
-    do_it_all()
-
-    # print(str(tokenizer.decode([422])))
-
+    find_non_canonicals()
+    
     end_time = datetime.now()
     elapsed_time = end_time - start_time
     print(f"Program completed in {elapsed_time}.")
