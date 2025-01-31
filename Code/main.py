@@ -244,23 +244,22 @@ def compare_likelihoods():
             file.write("the average non-canonical log-likelihood for " + str(token_count) + " tokens and " + str(steps) + " steps is " + str(avg_non_canonical_likelihood) + ", and the average canonical log-likeliood is " + str(avg_canonical_likelihood) + "\n\n")
 
 def do_it_all():
-    output_file = "REAL-12-26-doitall-1.txt"
-    raw_file = "REAL-12-26-raw-doitall-1.txt"
+    output_file = "TEST-1-30-doitall-1.txt"
+    raw_file = "TEST-1-30-raw-doitall-1.txt"
 
     model = AutoModelForCausalLM.from_pretrained("gpt2").to("cuda")
 
     device = torch.device("cuda:0")
     tokenizer.pad_token = tokenizer.eos_token
     
-    token_counts = [50, 100, 150, 200, 250, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 800, 850, 900, 950, 1000]
-    step_counts = [200, 242, 284, 326, 368, 410, 452, 494, 536, 578, 620, 662, 704, 746, 788, 830, 872, 914, 956, 998]
+    token_count = 1000
+    step_counts = [10, 25, 50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000]
 
-    num_counts = 20
-    batches_per_count = 10
-    batch_size = 5
+    num_counts = 4
+    batches_per_count = 2
+    batch_size = 3
 
     for i in range(num_counts): 
-        token_count = token_counts[i]
         steps = step_counts[i]
 
         with open(raw_file, 'a') as file:
@@ -364,7 +363,7 @@ def find_non_canonicals():
 def main():
     start_time = datetime.now() 
 
-    find_non_canonicals()
+    do_it_all()
     
     end_time = datetime.now()
     elapsed_time = end_time - start_time
