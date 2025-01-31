@@ -10,7 +10,7 @@ from load_model import load_model
 
 torch.set_printoptions(threshold=10000)
 
-device = torch.device('cuda:0')
+device = torch.device('cuda:2')
 # model, graph, noise = load_model("louaaron/sedd-medium", device)
 tokenizer = GPT2TokenizerFast.from_pretrained("gpt2")
 
@@ -72,7 +72,7 @@ def check_canonicity_many():
     output_file = "12-2-batch-check-canonicity.txt"
     raw_file = "12-2-batch-raw-check-canonicity.txt"
 
-    device = torch.device("cuda:0")
+    device = torch.device("cuda:2")
     tokenizer.pad_token = tokenizer.eos_token
 
     token_counts = [1, 50, 100, 200, 300, 500]
@@ -119,7 +119,7 @@ def check_edit_distance():
     output_file = "REAL-12-8-edit-distance-2.txt"
     raw_file = "REAL-12-8-raw-edit-distance-2.txt"
 
-    device = torch.device("cuda:0")
+    device = torch.device("cuda:2")
     tokenizer.pad_token = tokenizer.eos_token
     
     token_counts = [100, 250, 400, 500, 750, 900, 1000]
@@ -183,7 +183,7 @@ def compare_likelihoods():
 
     model = AutoModelForCausalLM.from_pretrained("gpt2").to("cuda")
 
-    device = torch.device("cuda:0")
+    device = torch.device("cuda:2")
     tokenizer.pad_token = tokenizer.eos_token
     
     token_counts = [100, 250, 400, 500, 750, 900, 1000]
@@ -249,7 +249,7 @@ def do_it_all():
 
     model = AutoModelForCausalLM.from_pretrained("gpt2").to("cuda")
 
-    device = torch.device("cuda:0")
+    device = torch.device("cuda:2")
     tokenizer.pad_token = tokenizer.eos_token
     
     token_count = 1000
@@ -333,7 +333,7 @@ def find_non_canonicals():
 
     model = AutoModelForCausalLM.from_pretrained("gpt2").to("cuda")
 
-    device = torch.device("cuda:0")
+    device = torch.device("cuda:2")
     tokenizer.pad_token = tokenizer.eos_token
 
     for i in range(5):

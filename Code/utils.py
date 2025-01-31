@@ -8,7 +8,7 @@ from transformers import AutoTokenizer, AutoModelForCausalLM
 import tqdm, numpy as np
 # import math, multiprocessing, functools
 
-device = torch.device('cuda:0')
+device = torch.device('cuda:2')
 
 
 def load_hydra_config_from_run(load_dir):
@@ -150,6 +150,29 @@ def rhloglikelihood(model: AutoModelForCausalLM, tokenizer: AutoTokenizer, texts
     lls = torch.cat(lls, dim=0)
 
     return lls.to("cpu")
+
+import numpy as np
+import torch
+
+def compute_perplexity(model: AutoModelForCausalLM, tokenizer: AutoTokenizer, texts: list, batch_size: int = 16, prefix: list = [], prefix_cutoff: bool = False,
+                    online_memory: bool = True, use_tqdm: bool = False, **kwargs):
+    # Compute log-likelihoods using the rhloglikelihood function
+    log_likelihoods = rhloglikelihood(model, tokenizer, texts)
+    
+    # Compute the total number of words
+    text_lengths = list(map(len, texts))
+    total_words = np.sum(text_lengths)
+    
+    # Sum the log-likelihoods
+    total_log_likelihood = torch.sum(log_likelihoods).item()
+    
+    # Compute the average log-likelihood
+    avg_log_likelihood = total_log_likelihood / total_words
+    
+    # Compute the perplexity
+    perplexity = np.exp(-avg_log_likelihood)
+    
+    return perplexity
 
 
 def batch_rhloglikelihood(model: AutoModelForCausalLM, tokenizer: AutoTokenizer, texts: list,

@@ -10,7 +10,7 @@ torch.set_printoptions(threshold=10000)
 
 def sample_tokens(batch_size, num_tokens, steps):
     
-    device = torch.device('cuda:0')
+    device = torch.device('cuda:2')
     model, graph, noise = load_model("louaaron/sedd-medium", device)
 
     sampling_fn = sampling.get_pc_sampler(
@@ -28,7 +28,7 @@ def main():
     args = parser.parse_args()
 
     
-    device = torch.device('cuda:0')
+    device = torch.device('cuda:2')
     model, graph, noise = load_model(args.model_path, device)
     tokenizer = GPT2TokenizerFast.from_pretrained("gpt2")
 

@@ -12,7 +12,7 @@ from load_model import load_model
 
 torch.set_printoptions(threshold=10000)
 
-device = torch.device('cuda:0')
+device = torch.device('cuda:2')
 # model, graph, noise = load_model("louaaron/sedd-medium", device)
 tokenizer = GPT2TokenizerFast.from_pretrained("gpt2")
 
@@ -76,7 +76,7 @@ def do_it_all():
 
     model = AutoModelForCausalLM.from_pretrained("gpt2").to("cuda")
     tokenizer.pad_token = tokenizer.eos_token
-    device = torch.device("cuda:0")
+    device = torch.device("cuda:2")
 
     token_count = 1000
     step_counts = [10, 25, 50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000]
