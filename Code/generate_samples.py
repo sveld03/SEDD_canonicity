@@ -23,11 +23,10 @@ auto_model = AutoModelForCausalLM.from_pretrained("gpt2").to("cuda:2")
 total_samples = 100  # Total samples required per step count
 batch_size = 5      # Generate only 5 at a time
 token_count = 1000   # Fixed token count
-step_counts = [10, 25, 50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000]
-# step_counts = [10, 25] 
+step_counts = [10, 25, 50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1200]
 
 # Open CSV file for writing and store results incrementally
-csv_filename = "test_samples_5.csv"
+csv_filename = "raw_data.csv"
 with open(csv_filename, "w") as f:
     f.write("Token Count,Step Count,Sample Index,Original Tokens,Decoded Text,Retokenized Tokens,Canonical?,Edit Distance,Original Perplexity,Retokenized Perplexity,Non-Canonicals,Canonicals\n")  # CSV Header
 
@@ -49,7 +48,7 @@ for steps in step_counts:
             # Re-tokenize the decoded text
             retokenized_tokens = tokenizer(decoded_text, padding=True, truncation=True, add_special_tokens=False)["input_ids"]
 
-            canon_bool = (original_tokens == retokenized_tokens)
+            canon_bool = 1 if (original_tokens.tolist() == retokenized_tokens) else 0
 
             edit_distance = Levenshtein.distance(
                 " ".join(map(str, original_tokens.tolist())),
