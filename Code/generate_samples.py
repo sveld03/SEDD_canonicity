@@ -23,10 +23,11 @@ auto_model = AutoModelForCausalLM.from_pretrained("gpt2").to("cuda:2")
 total_samples = 100  # Total samples required per step count
 batch_size = 5      # Generate only 5 at a time
 token_count = 1000   # Fixed token count
-step_counts = [10, 25, 50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1200]
+# step_counts = [10, 25, 50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1200]
+step_counts = [1400, 1700, 2000]
 
 # Open CSV file for writing and store results incrementally
-csv_filename = "raw_data.csv"
+csv_filename = "so_many_steps.csv"
 with open(csv_filename, "w") as f:
     f.write("Token Count,Step Count,Sample Index,Original Tokens,Decoded Text,Retokenized Tokens,Canonical?,Edit Distance,Original Perplexity,Retokenized Perplexity,Non-Canonicals,Canonicals\n")  # CSV Header
 
