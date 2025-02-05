@@ -33,7 +33,7 @@ def dist_canon(X: torch.Tensor) -> np.ndarray:
     if isinstance(X, torch.Tensor):
         X = X.tolist()
     f = tokenizer.decode if isinstance(X[0], int) else tokenizer.batch_decode
-    s = f(X, skip_special_tokens=True)
+    s = f(X, skip_special_tokens=True) # s = tokenizer.decode(original_tokens, skip_special_tokens=True)
     K, O = tokenizer(s, add_special_tokens=False)["input_ids"], rmst(X)
     return np.array([Levenshtein.distance(k, o) for k, o in zip(K, O)])
 
