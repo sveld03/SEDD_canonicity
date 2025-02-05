@@ -29,8 +29,9 @@ def rmst(X: list) -> list:
     return [[t for t in (x.numpy() if isinstance(x, torch.Tensor) else x) if t not in tokenizer.all_special_ids] for x in X]
 
 
-def dist_canon(X_tensor: torch.Tensor) -> np.ndarray:
-    X = X_tensor.tolist()
+def dist_canon(X: torch.Tensor) -> np.ndarray:
+    if isinstance(X, torch.Tensor):
+        X = X.tolist()
     f = tokenizer.decode if isinstance(X[0], int) else tokenizer.batch_decode
     s = f(X, skip_special_tokens=True)
     K, O = tokenizer(s, add_special_tokens=False)["input_ids"], rmst(X)
@@ -363,7 +364,151 @@ def find_non_canonicals():
 def main():
     start_time = datetime.now() 
 
-    do_it_all()
+    import re
+
+    # Paste the provided text here
+    text1 = """"<|endoftext|> Written  by  Junk o;;  items  below . 
+ 
+;;  fortunately ,  however ,  error;;  in  this  game .  Both;; su â€” V ido -;;  der az umi 
+ 
+;;  ï¿½ ï¿½ Sky ran ï¿½;; ï¿½ ï¿½ 
+ 
+ Total;; ï¿½ ! 
+ 
+ Total;;  SY R ,  CV ,;;  X DF K  rockets ,;;  Steel  Diver ,  Gun  Squad;;  Mar iza ,  G +;; :  Gat  Gat  Gun ner;;  Not  revived 
+ 
+ Total;;  snow  through  winter  and  spring;;  connected  by  narrow  networks  of;;  railways  and  human - powered;;  of  Earth - X ï¿½;; ï¿½ s  satellites  would  know;;  reality .  And  they  would;;  Sa ikawa;;  Also ,;;  Hong su;; !  info;;  can  be;; :  Steam;;  of  the;;  place  during;;  and  view;; 
+ Edited;;  the  Original;;  rate  network;; , 0;;  on  Youtube;; rob aki;; / r;; ers _-_;; t og;; un _-_;; rec ap;; _-_ the;; obby _;; ,  you;;  one  another;; 
+ A;;  if  you;;  want .;; ED  7;;  c Development;; :  Tempest;; 
+ 
+;; ï¿½ 
+;;  list  level;; :  Sentinel;; list  level;;  Assault ï¿½;; list  level;; ing  Up;;  Archer ,;;  Level  2;; :  X;;  Level  3;;  Master 
+;;  Region 
+;;  on  preserved;;  of  protected;;  for  isolated;;  fre eways;; ."" 
+;;  but  also;; 
+ 
+ The  Command;;  found  on  the  various;;  K Å hei  Nan;; No - ji ,;;  Fighters  can  be  streamed;; me ets / t;; 69 / written _;; In cluding  the  three;;  most  likely ,  see;;  uses  a  grid ,;;  In  practice ,  you;; 
+ VO :  Nintendo;; 's  ghost  from  the;;  Check  out  it  to;; Version  L OD s;; 
+ 
+ COL LECT;;  Music  for  ï¿½ ï¿½;;  3 :  Space  for;; i 
+ 
+ Total;; b 
+ 
+ Total;;  list  Level  5 :;; 
+ ï¿½ ï¿½ ï¿½;;  News  Article :  "";;  mountains  of  forest  that;;  would  absorb  rain  and;;  the  would - be;;  the  region ï¿½ ï¿½;; s  vast  bas ins;; hab ited ,  save;;  its  seas  and  rivers;;  of  Size 
+;;  but  numerous  maps;; ,  providing  a;; Image  Sources :;; 
+ 
+ NOTE;;  it 's  the;;  covering  the  current;;  the  process .;;  on  speed  and;;  version  2 ,;; : 
+ 
+;; by _ read;; Viol ent _;; ! 
+ 
+;;  many  players  achieve;;  your  friends  against;; ,  or  ï¿½;; ï¿½ ï¿½  T;; aito ,  you;;  shape  it  up;;  Few  Maps 
+;;  and  Tsu  will;;  find  over  at;;  the  Temple !;;  End  Release 
+;; Jose B  Area;; Jose B  Area;;  2  Van  Tun;;  groundwater .  Along;;  border  towns ,;;  land  are  far;; .  Despite  all;; 
+ The  dwell;; 
+ Not  the  full  game  itself  has  been  released ,;;  the  two - only  mode ,  and  others  can  note;;  run  straight  into  strategy  issues .  The  rules  are  very;;  Z ens iem ancer  has  a  new  inventory  system .;;  would  become  de celer ated  residents ,  since  most  of;;  general;;  organization;;  overview;;  by;;  to;;  are;;  Hong;;  Hom;; http;; ://;; com;; aya;;  simple;;  (;;  exploring;;  for;;  1;;  1;;  Generation;; Alpha;;  Combat;;  list;;  list;;  Frank;;  been;;  below;;  totally;; ers;;  look  at  Hong su !  as  well !  Downloads  cover  the  total  level match  system  and  data .;;  owned  assets  are  preferred  for  others  to  share  ( even  if;; 
+ The  two - only  Steam  Copy  Club  for  Kong su;; ),  giving  you  access  consoles  like  M ite  the  Driver  to;;  art  director  of  an  existing  series ). 
+ 
+ NOTE :  This  bug  report  is;;  Index  ( Click  Here !)  page  for  an;; even  with  0 / 4  players  unlock  them;;  Band ai  Nam co  added  additional  content  for;;  list  Level  4 :  Matrix 
+ 
+ Total;; Å 
+ 
+ Steam  Copy  Club 
+;;  and  Gilbert . 
+ 
+ Rob otech;; 
+ 
+ 5  for  ï¿½ ï¿½ New;;  Select or  for  Technique 
+ 
+ Total;; - X ,  Asuka ,  Al addin;; ï¿½ ï¿½ ï¿½ 
+ 
+ F art;;  huge  expense ,  relatively  few  rivers  are;;  lake  systems  within  mountain  cont ours ,;;  not  only  the  Greenland  Rocky  mountains ,;; !  is  the  same  smooth  as;;  version  when  you  switch  version  1;;  might  not  be  able  to  pit;;  get  out  more  about  what  he;;  DEC EMBER  07 
+ 
+ Version;; :  Aster oids 
+ 
+ Total;;  XIII  ~ Turn  =  Director  of;;  list  Level  1 :  Sp ina;; 
+ Cons ervation  System 
+ 
+;; .  The  forests  would  pass over;;  version ,  now  available  but  still  not  available .  The  Tok uma  FUN imation  version  has;;  secured  by  a  naval  blockade  a  hundred  years  ago .  They  are  ring ed  by  broad;;  ground .  This  would  require  continuous  protection  of  wildlife  habitat  and  independent  checks  of  native  species;; ,  which  means  they  recommend  the  players  download  Hong su !  instead .  This  seems  to  be  the  perfect  solution  on  the  Premium;; 0 . 
+ 
+ There 's  2  game  characters;; ura ,  Kira - Ch u ,  Tam na;;  and  complete  different  levels  in  playing  Rob otech  Fighters !  The  game;;  unrestricted  geometry  system  with  a  gravity - based  move  system  and  handles  the  filtering  between  the  players  during  the  match;; Close ly  unpop ulated  valleys  on  the  Central  British  Columbia  coast  would  secured  the  continental  border  as  Sweden  had;; :  a  landscape  that  would  make  its  ecological  and  vast  resources  a  greater"
+"""
+
+    text2 = """Written  by  Junk o  Sa ikawa 
+ 
+ The;; 
+ 
+ Image  Sources;;  however ,  error  on  speed  and;; .  Both  are  Hong su â€” V;; ,  Hom ura;; cluding  the;; Jose B  Area;;  level  2 :;;  level  3 :;; K  rockets;; ,  Jenn i 
+ 
+ Total;;  Gun  Squad ,  Mar iza ,  G + b;; 
+ Total  list;; ner  Not  revived 
+;; 
+ Total  list  Level  4;;  winter  and  spring .  The  forests;;  narrow  networks  of  railways  and;;  human - powered  fre eways ."" 
+ 
+;; s  satellites;;  would  know  not  only  the;;  they  would  never  remain;;  Command;; !  info;;  can  be;;  found;;  on  the;;  assets;;  during;;  the  two - only;;  process .;; hei  Nan;;  version ,  now;; ,  which  means;;  2;; 
+ http :// rob;; me ets /;; 69;; _ t ogun;; _-_;; the _ l;; obby _;; Hong su;; 
+ H aya;;  most;;  or  ï¿½ ï¿½ kill ï¿½ ï¿½;; VO;;  Levi 's;;  ghost;;  07 
+;;  End  Release 
+;;  for  ï¿½ ï¿½ Sk;; yr;;  1;; :  Sentinel 
+;;  for  ï¿½ ï¿½ New;;  Music  for;; T ot all ist;;  Space  for;; or  for;;  CV ,  X DF;; ,  Asuka ,;;  Al;;  Gat  Gun;; ï¿½ ï¿½ 
+ 
+ F art;; ervation;;  groundwater .;;  land  are  far;;  lake  systems;; The  dwell;; ers;;  seas  and;;  of  Size 
+ 
+ Not;;  various  items  below .;; Steam  Copy;; ,  Kira;;  be  streamed  on  Youtube : 
+;; written;; _ read ers _-_;;  three ,  you  should ,;;  see  many  players;;  unrestricted;;  you  might  not  be;;  Band ai  Nam co;;  the  Z ens iem ancer;;  to  get  out  more;; 
+ COL LECT ED  7;;  DEC EMBER;; Alpha  Assault;;  XIII  ~ Turn  =;;  Level  2;;  Level  3;; :  Frank  Master;; hest;; :  "" Close ly  unpop;;  forest  that  would  absorb;;  rain  and  snow  through;;  border  towns;; s  vast  bas ins;;  of  protected;;  for  isolated;;  rivers :  a  landscape;;  the  full;;  maps ,  providing  a;;  general  look;; : 
+ 
+ NOTE :  Steam;;  owned;;  director;;  current  organization;; 
+ 
+ Edited  by  K;;  rate  network;; 
+ 
+ There 's  2;; aki;; Viol ent;; _-_ rec ap;; umi;;  achieve  and  complete;;  against  one  another ,;;  T aito;;  run;;  straight;; 
+ 
+ A  Few  Maps;; :  Nintendo;;  find  over  at;;  the  Temple ! 
+;; 
+ Version  L OD;; 
+ Jose B  Area  0;;  Tempest 
+ 
+;;  Aster oids;;  Up  Select;;  Along  the  would - be;; ,  people  would;;  below  ground;;  huge  expense;;  of  Earth -;;  game  itself  has  been  released ,  but  numerous;;  mode ,  and  others  can  note  this  Index  (;;  into  strategy  issues .  The  rules  are  very  simple  ( even;;  has  a  new  inventory  system .  Check  out  it;;  de celer ated  residents ,  since  most  of  the  region ï¿½ ï¿½;;  at  Hong;;  of  the  place;;  view  the;; Å 
+ 
+;; , 0 .;; ido -;; No - ji;; - Ch u;; . com;; / r /;; / 15;; 
+ In;;  with  0;; / 4;;  you  want .;; ï¿½ ï¿½ 
+ 
+;; 
+ 
+;; 
+ 5;; 
+ 
+ T ot all ist;; ï¿½ ï¿½ ! 
+ 
+;;  Tun ing;; :  X - X;; :  Gat;; 
+ 
+ ï¿½ ï¿½ ï¿½ ï¿½;;  by  a;; .  This;; hab ited ,;; X ï¿½ ï¿½;; su !  as  well !  Downloads  cover  the  total  level match  system  and  data .  Also ,  Hong su;;  are  preferred  for  others  to  share  ( even  if  it 's  the  art;;  Steam  Copy  Club  for  Kong su !  is  the  same;;  access  consoles  like  M ite  the  Driver  to  shape  it  up .;;  of  an  existing  series ). 
+ 
+ NOTE :  This  bug  report  is  covering  the;;  Here !)  page  for  an  overview  and;;  players  unlock  them ),  giving  you;;  added  additional  content  for  exploring  if;; :  Matrix 
+ 
+ Total  list  Level  5;;  Club 
+ 
+ The  two - only;; 
+ 
+ Rob otech  Fighters  can;;  Generation ï¿½ ï¿½;;  Technique 
+ 
+ Total  list  Level  1;; addin ,  Steel  Diver;;  Region 
+ 
+;; ,  relatively  few  rivers  are  totally  unin;;  within  mountain  cont ours ,  connected  by;;  Greenland  Rocky  mountains ,  but  also  its;;  smooth  as  the  Original;;  you  switch  version  1 , 0  to  version;;  able  to  pit  your  friends;;  about  what  he  and  Tsu  will;; 
+ Version  c Development;; Total  list  level  1;;  Director  of  Combat  2  Van;; :  Sp ina ,  Archer ,  SY R;;  System 
+ 
+ Previous  News;;  would  pass over  on  preserved;;  available  but  still  not  available .  The  Tok uma  FUN imation  version  has  fortunately ,;;  naval  blockade  a  hundred  years  ago .  They  are  ring ed  by  broad  mountains  of;;  would  require  continuous  protection  of  wildlife  habitat  and  independent  checks  of  native  species .  Despite  all;;  they  recommend  the  players  download  Hong su !  instead .  This  seems  to  be  the  perfect  solution  on  the  Premium  version  when;;  game  characters  in  this  game;; ,  Tam na  and  Gilbert .;;  different  levels  in  playing  Rob otech  Fighters !  The  game  uses  a  grid ,;;  geometry  system  with  a  gravity - based  move  system  and  handles  the  filtering  between  the  players  during  the  match .  In  practice;; ulated  valleys  on  the  Central  British  Columbia  coast  would  secured  the  continental  border  as  Sweden  had  been  secured;;  that  would  make  its  ecological  and  vast  resources  a  greater  reality .  And"
+"""
+
+    # Count occurrences of ';;' in the provided text
+    double_semicolon_count1 = len(re.findall(r';;', text1))
+    double_semicolon_count2 = len(re.findall(r';;', text2))
+
+    # Display the result
+    print("Number of ';;' occurrences 1:", double_semicolon_count1)
+    print("Number of ';;' occurrences 2:", double_semicolon_count2)
+
     
     end_time = datetime.now()
     elapsed_time = end_time - start_time
