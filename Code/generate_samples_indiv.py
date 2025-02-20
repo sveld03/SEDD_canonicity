@@ -20,11 +20,11 @@ tokenizer.pad_token = tokenizer.eos_token  # Ensure padding token is set
 auto_model = AutoModelForCausalLM.from_pretrained("gpt2").to("cuda:2")
 
 # Define parameters
-token_count = 1000   # Fixed token count
-step_counts = list(range(1, 2001, 1))
+token_count = 1024   # Fixed token count
+step_counts = list(range(1, 20, 1))
 
 # Open CSV file for writing and store results incrementally
-csv_filename = "raw_data_indiv.csv"
+csv_filename = "raw_data_test.csv"
 with open(csv_filename, "w") as f:
     f.write("Token Count,Step Count,Sample Index,Original Tokens,Retokenized Tokens,Original Token Strings,Retokenized Token Strings,Decoded Text,Canonical?,Edit Distance,Original Perplexity,Retokenized Perplexity,Non-Canonicals,Canonicals\n")  # CSV Header
 
