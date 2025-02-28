@@ -19,14 +19,14 @@ tokenizer.pad_token = tokenizer.eos_token  # Ensure padding token is set
 auto_model = AutoModelForCausalLM.from_pretrained("gpt2").to("cuda:2")
 
 # Define parameters
-total_samples = 100  # Total samples required per step count
+total_samples = 45  # Total samples required per step count
 batch_size = 1      # Generate only 5 at a time
 token_count = 1024   # Fixed token count
 # step_counts = [10, 25, 50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1200]
 step_counts = [1024]
 
 # Open CSV file for writing and store results incrementally
-csv_filename = "intermediate-data.csv"
+csv_filename = "intermediate-data-2.csv"
 with open(csv_filename, "w") as f:
     f.write("Token Count,Step Count,Sample Index,Step Number,Original Tokens,Decoded Text,Retokenized Tokens,Canonical?,Edit Distance,Original Perplexity,Retokenized Perplexity,Non-Canonicals,Canonicals\n")  # CSV Header
 
@@ -41,7 +41,7 @@ for steps in step_counts:
 
         results = []
         for step, original_sequence in samples.items():
-            sample_index = batch_num * batch_size  # Compute absolute sample index
+            sample_index = (batch_num+55) * batch_size  # Compute absolute sample index
 
             original_tokens = original_sequence[0]
                 
