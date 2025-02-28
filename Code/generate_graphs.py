@@ -1,49 +1,43 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
-from scipy.stats import linregress
 
 plt.switch_backend('Agg')
 
 # Load the CSV file
-file_path = "raw_data_indiv.csv"
+file_path = "Big_Data/intermediate-data.csv"
 df = pd.read_csv(file_path)
 
-# Ensure the relevant columns exist
-if "Log Step Count" in df.columns and "Original Log-Likelihood" in df.columns:
-    # Extract relevant data
-    step_counts = df["Log Step Count"]
-    log_likelihoods = df["Original Log-Likelihood"]
+# Check that the necessary columns exist
+if "Step Number" in df.columns and "Edit Distance" in df.columns:
+    # Convert the "Edit Distance" column to numeric, coercing errors to NaN.
+    df["Step Number"] = pd.to_numeric(df["Step Number"], errors="coerce")
+    df["Edit Distance"] = pd.to_numeric(df["Edit Distance"], errors="coerce")
 
-    # Perform linear regression to get the line of best fit
-    slope, intercept, r_value, p_value, std_err = linregress(step_counts, log_likelihoods)
-    line_fit = slope * step_counts + intercept
+    # Drop rows where "Edit Distance" could not be converted (if any).
+    df = df.dropna(subset=["Step Number", "Edit Distance"])
+    
+    # Group by step number and compute the mean edit distance for each step
+    grouped = df.groupby("Step Number")["Edit Distance"].mean().reset_index()
+    grouped = grouped.sort_values("Step Number")
 
-    # Create scatterplot
+    # Extract step numbers and corresponding average edit distances
+    step_numbers = grouped["Step Number"]
+    avg_edit_distance = grouped["Edit Distance"]
+
+    # Create a line plot
     plt.figure(figsize=(8, 6))
-    plt.scatter(step_counts, log_likelihoods, label="Data points", color='blue', alpha=0.6)
-    plt.plot(step_counts, line_fit, color='red', label=f"Best fit: y={slope:.2f}x + {intercept:.2f}")
+    plt.plot(step_numbers, avg_edit_distance, color='blue', linewidth=2, label="Avg Edit Distance")
 
     # Add labels and title
-    plt.xlabel("Log Step Count")
-    plt.ylabel("Original Log-Likelihood")
-    plt.title("Original Log-Likelihood vs. Log Step Count")
+    plt.xlabel("Step Number")
+    plt.ylabel("Average Edit Distance")
+    plt.title("Average Edit Distance vs. Step Number")
     plt.legend()
     plt.grid(True)
 
-    # Display statistical values on the graph
-    stats_text = (f"Correlation coefficient (r): {r_value:.4f}\n"
-                  f"p-value: {p_value:.4e}\n"
-                  f"Standard error: {std_err:.4f}")
-    
-    plt.text(0.05, 0.95, stats_text, transform=plt.gca().transAxes, fontsize=10,
-             verticalalignment='top', bbox=dict(facecolor='white', alpha=0.5))
-
-    # Adjust layout to prevent label cutoff
+    # Adjust layout and save the plot to a file
     plt.tight_layout()
-
-    # Save the plot to a file
-    plt.savefig('original_log_log_likelihoods_scatterplot.png', bbox_inches='tight', dpi=300)
-
+    plt.savefig('avg_edit_distance_linegraph.png', bbox_inches='tight', dpi=300)
 else:
     print("Required columns not found in the dataset. Please check the CSV structure.")
