@@ -5,7 +5,7 @@ import numpy as np
 from datetime import datetime
 
 from run_sample import sample_tokens
-from utils import rhloglikelihood
+from utils import rhloglikelihood, custom_decode, custom_encode, uncanons, compute_perplexity, uncanons, rmst, dist_canon, canon
 from load_model import load_model
 
 torch.set_printoptions(threshold=10000)
@@ -21,53 +21,6 @@ def check_canonicity_one(actual_tokens, canonical_tokens):
         return True
     else:
         return False
-    
-def rmst(X: list) -> list:
-    "Returns a new list without special tokens."
-    if np.issubdtype(type(X[0]), np.integer) or (len(X[0]) == 0):
-        return [x for x in (X.numpy() if isinstance(X, torch.Tensor) else X) if x not in tokenizer.all_special_ids]
-    return [[t for t in (x.numpy() if isinstance(x, torch.Tensor) else x) if t not in tokenizer.all_special_ids] for x in X]
-
-
-def dist_canon(X: torch.Tensor) -> np.ndarray:
-    if isinstance(X, torch.Tensor):
-        X = X.tolist()
-    f = tokenizer.decode if isinstance(X[0], int) else tokenizer.batch_decode
-    s = f(X, skip_special_tokens=True) # s = tokenizer.decode(original_tokens, skip_special_tokens=True)
-    K, O = tokenizer(s, add_special_tokens=False)["input_ids"], rmst(X)
-    return np.array([Levenshtein.distance(k, o) for k, o in zip(K, O)])
-
-def canon(X: list) -> list:
-    f = tokenizer.decode if np.issubdtype(type(X[0]), np.integer) else tokenizer.batch_decode
-    s = f(X, skip_special_tokens=False)
-    return tokenizer(s, add_special_tokens=False)["input_ids"]
-
-def uncanons(V: list, V_canon: list = None) -> dict:
-    if isinstance(V[0], torch.Tensor): V = V.cpu().numpy()
-    if V_canon is None: V_canon = canon(V)
-    O, c = collections.defaultdict(list), 0
-    l_u, l_v = 0, 0
-    i, j, start_i, start_j = 0, 0, 0, 0
-    move_i, move_j = True, True
-    while (i < len(V)) and (j < len(V_canon)):
-        u, v = V[i], V_canon[j]
-        l_u += len(tokenizer.decode([u])) if move_i else 0
-        l_v += len(tokenizer.decode([v])) if move_j else 0
-        move_i, move_j = False, False
-        if l_u >= l_v:
-            j += 1
-            move_j = True
-        if l_v >= l_u:
-            i += 1
-            move_i = True
-        if l_u != l_v:
-            if c == 0: start_i, start_j = i-move_i, j-move_j
-            c += 1
-        elif c > 0:
-            O[i-start_i].append(([tokenizer.decode([V[x]]) for x in range(start_i, i)],
-                                 [tokenizer.decode([V_canon[y]]) for y in range(start_j, j)]))
-            c = 0
-    return O
 
 def check_canonicity_many():
     output_file = "12-2-batch-check-canonicity.txt"

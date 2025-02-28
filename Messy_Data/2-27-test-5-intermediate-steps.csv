@@ -1,0 +1,36 @@
+Token Count,Step Count,Sample Index,Step Number,Original Tokens,Decoded Text,Retokenized Tokens,Canonical?,Edit Distance,Original Perplexity,Retokenized Perplexity,Non-Canonicals,Canonicals
+10,5,0,0,[50256], [MASK]  [MASK]  [MASK]  [MASK]  [MASK]  [MASK]  [MASK]  [MASK]  [MASK]  [MASK] ,[50256],1,0,1.0,1.0,None,None
+10,5,0,1,"[621, 25, 286]", [MASK]  [MASK]  [MASK]  than [MASK]  [MASK] : [MASK]  of [MASK] ,"[621, 25, 286]",1,0,89.37088790843111,89.37088790843111,None,None
+10,5,0,2,"[621, 7353, 25, 286]", [MASK]  [MASK]  [MASK]  than [MASK] post: [MASK]  of [MASK] ,"[621, 7353, 25, 286]",1,0,489.20841289787234,489.20841289787234,None,None
+10,5,0,3,"[2138, 621, 7353, 25, 286, 749]", [MASK]  [MASK]  rather than [MASK] post: [MASK]  of most,"[2138, 621, 7353, 25, 286, 749]",1,0,1128.4038227256767,1128.4038227256767,None,None
+10,5,0,4,"[534, 2138, 621, 7353, 25, 286, 749]", your [MASK]  rather than [MASK] post: [MASK]  of most,"[534, 2138, 621, 7353, 25, 286, 749]",1,0,793.6813541539966,793.6813541539966,None,None
+10,5,0,5,"[534, 2138, 621, 7353, 25, 286, 749]", your [MASK]  rather than [MASK] post: [MASK]  of most,"[534, 2138, 621, 7353, 25, 286, 749]",1,0,793.6813541539966,793.6813541539966,None,None
+10,5,0,6,"[534, 3919, 2138, 621, 534, 7353, 25, 2239, 286, 749]", yourno rather than yourpost: step of most,"[534, 3919, 2138, 621, 534, 7353, 25, 2239, 286, 749]",1,0,1024.4667273983357,1024.4667273983357,None,None
+10,5,1,0,[50256], [MASK]  [MASK]  [MASK]  [MASK]  [MASK]  [MASK]  [MASK]  [MASK]  [MASK]  [MASK] ,[50256],1,0,1.0,1.0,None,None
+10,5,1,1,"[606, 3644, 11]"," [MASK]  [MASK]  [MASK]  [MASK]  [MASK]  [MASK]  them computer [MASK] ,","[606, 3644, 11]",1,0,80.61097191036117,80.61097191036117,None,None
+10,5,1,2,"[3381, 606, 3644, 11]"," term [MASK]  [MASK]  [MASK]  [MASK]  [MASK]  them computer [MASK] ,","[3381, 606, 3644, 11]",1,0,313.6426558523807,313.6426558523807,None,None
+10,5,1,3,"[3381, 11, 3522, 787, 606, 3644, 3788, 11]"," term [MASK] , [MASK]  refer make them computer software,","[3381, 11, 3522, 787, 606, 3644, 3788, 11]",1,0,295.78854189449993,295.78854189449993,None,None
+10,5,1,4,"[3381, 11, 3522, 787, 606, 3644, 3788, 11]"," term [MASK] , [MASK]  refer make them computer software,","[3381, 11, 3522, 787, 606, 3644, 3788, 11]",1,0,295.78854189449993,295.78854189449993,None,None
+10,5,1,5,"[3381, 11, 3522, 787, 606, 3644, 3788, 11]"," term [MASK] , [MASK]  refer make them computer software,","[3381, 11, 3522, 787, 606, 3644, 3788, 11]",1,0,295.78854189449993,295.78854189449993,None,None
+10,5,1,6,"[3381, 779, 11, 393, 3522, 787, 606, 3644, 3788, 11]"," term use, or refer make them computer software,","[3381, 779, 11, 393, 3522, 787, 606, 3644, 3788, 11]",1,0,197.052267222736,197.052267222736,None,None
+10,5,2,0,[50256], [MASK]  [MASK]  [MASK]  [MASK]  [MASK]  [MASK]  [MASK]  [MASK]  [MASK]  [MASK] ,[50256],1,0,1.0,1.0,None,None
+10,5,2,1,[738], [MASK] ident [MASK]  [MASK]  [MASK]  [MASK]  [MASK]  [MASK]  [MASK]  [MASK] ,[738],1,0,1.0,1.0,None,None
+10,5,2,2,"[738, 290, 2648]", [MASK] ident [MASK]  and [MASK]  [MASK]  share [MASK]  [MASK]  [MASK] ,"[738, 290, 2648]",1,0,65.70649836077666,65.70649836077666,None,None
+10,5,2,3,"[12, 738, 290, 2648, 326, 6228]",-ident [MASK]  and [MASK]  [MASK]  share that flat [MASK] ,"[12, 738, 290, 2648, 326, 6228]",1,0,778.4039738312957,778.4039738312957,None,None
+10,5,2,4,"[12, 738, 6945, 290, 407, 2648, 326, 6228, 736]",-identifies and not [MASK]  share that flat back,"[12, 738, 6945, 290, 407, 2648, 326, 6228, 736]",1,0,506.157648184167,506.157648184167,None,None
+10,5,2,5,"[12, 738, 6945, 290, 407, 477, 2648, 326, 6228, 736]",-identifies and not all share that flat back,"[12, 738, 6945, 290, 407, 477, 2648, 326, 6228, 736]",1,0,447.19013235478684,447.19013235478684,None,None
+10,5,2,6,"[12, 738, 6945, 290, 407, 477, 2648, 326, 6228, 736]",-identifies and not all share that flat back,"[12, 738, 6945, 290, 407, 477, 2648, 326, 6228, 736]",1,0,447.19013235478684,447.19013235478684,None,None
+10,5,3,0,[50256], [MASK]  [MASK]  [MASK]  [MASK]  [MASK]  [MASK]  [MASK]  [MASK]  [MASK]  [MASK] ,[50256],1,0,1.0,1.0,None,None
+10,5,3,1,"[12023, 6186]", [MASK]  [MASK]  [MASK]  beef [MASK]  [MASK]  [MASK]  [MASK]  Amazon [MASK] ,"[12023, 6186]",1,0,396.01080562053187,396.01080562053187,None,None
+10,5,3,2,"[35309, 12023, 6186]", Beef [MASK]  [MASK]  beef [MASK]  [MASK]  [MASK]  [MASK]  Amazon [MASK] ,"[35309, 12023, 6186]",1,0,3358.2062008967346,3358.2062008967346,None,None
+10,5,3,3,"[35309, 12023, 351, 6186]", Beef [MASK]  [MASK]  beef [MASK]  [MASK]  [MASK]  with Amazon [MASK] ,"[35309, 12023, 351, 6186]",1,0,398.36135630248674,398.36135630248674,None,None
+10,5,3,4,"[35309, 12023, 351, 6186, 35309]", Beef [MASK]  [MASK]  beef [MASK]  [MASK]  [MASK]  with Amazon Beef,"[35309, 12023, 351, 6186, 35309]",1,0,383.81570638835206,383.81570638835206,None,None
+10,5,3,5,"[35309, 12, 891, 12023, 4283, 12023, 12023, 351, 6186, 35309]", Beef-ef beef stock beef beef with Amazon Beef,"[35309, 12, 891, 12023, 4283, 12023, 12023, 351, 6186, 35309]",1,0,684.2896874699098,684.2896874699098,None,None
+10,5,3,6,"[35309, 12, 891, 12023, 4283, 12023, 12023, 351, 6186, 35309]", Beef-ef beef stock beef beef with Amazon Beef,"[35309, 12, 891, 12023, 4283, 12023, 12023, 351, 6186, 35309]",1,0,684.2896874699098,684.2896874699098,None,None
+10,5,4,0,[50256], [MASK]  [MASK]  [MASK]  [MASK]  [MASK]  [MASK]  [MASK]  [MASK]  [MASK]  [MASK] ,[50256],1,0,1.0,1.0,None,None
+10,5,4,1,[50256], [MASK]  [MASK]  [MASK]  [MASK]  [MASK]  [MASK]  [MASK]  [MASK]  [MASK]  [MASK] ,[50256],1,0,1.0,1.0,None,None
+10,5,4,2,"[284, 355]", [MASK]  [MASK]  to [MASK]  [MASK]  [MASK]  [MASK]  [MASK]  [MASK]  as,"[284, 355]",1,0,18.468272297247943,18.468272297247943,None,None
+10,5,4,3,"[4859, 284, 1282, 1626, 11, 355]"," [MASK]  stick to come within [MASK] , [MASK]  [MASK]  as","[4859, 284, 1282, 1626, 11, 355]",1,0,95.1194227579153,95.1194227579153,None,None
+10,5,4,4,"[4859, 284, 1282, 1626, 11, 355]"," [MASK]  stick to come within [MASK] , [MASK]  [MASK]  as","[4859, 284, 1282, 1626, 11, 355]",1,0,95.1194227579153,95.1194227579153,None,None
+10,5,4,5,"[257, 4859, 284, 1282, 1626, 16576, 11, 2263, 880, 355]"," a stick to come within nicely, taking well as","[257, 4859, 284, 1282, 1626, 16576, 11, 2263, 880, 355]",1,0,505.50604536022155,505.50604536022155,None,None
+10,5,4,6,"[257, 4859, 284, 1282, 1626, 16576, 11, 2263, 880, 355]"," a stick to come within nicely, taking well as","[257, 4859, 284, 1282, 1626, 16576, 11, 2263, 880, 355]",1,0,505.50604536022155,505.50604536022155,None,None

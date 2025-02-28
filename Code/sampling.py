@@ -2,11 +2,13 @@ import abc
 import torch
 import torch.nn.functional as F
 from catsample import sample_categorical
+from transformers import GPT2TokenizerFast
 
 from model import utils as mutils
 
 _PREDICTORS = {}
 
+tokenizer = GPT2TokenizerFast.from_pretrained("gpt2")
 
 def register_predictor(cls=None, *, name=None):
     """A decorator for registering predictor classes."""
@@ -105,7 +107,7 @@ class Denoiser:
         return sample_categorical(probs)
                        
 
-def get_sampling_fn(config, graph, noise, batch_dims, eps, device):
+def get_sampling_fn(config, graph, noise, batch_dims, eps, device, intermediates=False):
     
     sampling_fn = get_pc_sampler(graph=graph,
                                  noise=noise,
@@ -114,12 +116,13 @@ def get_sampling_fn(config, graph, noise, batch_dims, eps, device):
                                  steps=config.sampling.steps,
                                  denoise=config.sampling.noise_removal,
                                  eps=eps,
-                                 device=device)
+                                 device=device,
+                                 intermediates=intermediates)
     
     return sampling_fn
     
 
-def get_pc_sampler(graph, noise, batch_dims, predictor, steps, denoise=True, eps=1e-5, device=torch.device('cuda:2'), proj_fun=lambda x: x):
+def get_pc_sampler(graph, noise, batch_dims, predictor, steps, denoise=True, eps=1e-5, device=torch.device('cuda:2'), proj_fun=lambda x: x, intermediates=False):
     predictor = get_predictor(predictor)(graph, noise)
     projector = proj_fun
     denoiser = Denoiser(graph, noise)
@@ -127,23 +130,34 @@ def get_pc_sampler(graph, noise, batch_dims, predictor, steps, denoise=True, eps
     @torch.no_grad()
     def pc_sampler(model):
         sampling_score_fn = mutils.get_score_fn(model, train=False, sampling=True)
-        x = graph.sample_limit(*batch_dims).to(device)
+        x = graph.sample_limit(*batch_dims).to(device)  # Initial fully masked tokens
         timesteps = torch.linspace(1, eps, steps + 1, device=device)
         dt = (1 - eps) / steps
 
+        intermediate_outputs = {}  # Dictionary to store outputs at each step
+
         for i in range(steps):
+            # Store intermediate states
+            intermediate_outputs[i] = x.tolist()  # Convert token IDs to text
+
             t = timesteps[i] * torch.ones(x.shape[0], 1, device=device)
             x = projector(x)
             x = predictor.update_fn(sampling_score_fn, x, t, dt)
-            
 
+        intermediate_outputs[steps] = x.tolist()
+        
         if denoise:
-            # denoising step
+            # Final denoising step
             x = projector(x)
             t = timesteps[-1] * torch.ones(x.shape[0], 1, device=device)
             x = denoiser.update_fn(sampling_score_fn, x, t)
             
-        return x
-    
+            intermediate_outputs[steps+1] = x.tolist()
+
+        if intermediates:
+            return intermediate_outputs  # Return all intermediate sequences
+        else:
+            return x
+
     return pc_sampler
 

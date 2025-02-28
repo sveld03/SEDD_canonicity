@@ -5,9 +5,8 @@ from transformers import GPT2TokenizerFast, AutoModelForCausalLM
 from run_sample import sample_tokens
 from load_model import load_model
 from datetime import datetime
-from main import uncanons, dist_canon
+from utils import uncanons, dist_canon, compute_perplexity, rhloglikelihood, custom_decode
 import Levenshtein
-from utils import compute_perplexity, rhloglikelihood
 
 start_time = datetime.now() 
 
@@ -21,10 +20,10 @@ auto_model = AutoModelForCausalLM.from_pretrained("gpt2").to("cuda:2")
 
 # Define parameters
 token_count = 1024   # Fixed token count
-step_counts = list(range(1, 20, 1))
+step_counts = [100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110] # list(range(1, 200, 1))
 
 # Open CSV file for writing and store results incrementally
-csv_filename = "raw_data_test.csv"
+csv_filename = "indivs-test-2-27.csv"
 with open(csv_filename, "w") as f:
     f.write("Token Count,Step Count,Sample Index,Original Tokens,Retokenized Tokens,Original Token Strings,Retokenized Token Strings,Decoded Text,Canonical?,Edit Distance,Original Perplexity,Retokenized Perplexity,Non-Canonicals,Canonicals\n")  # CSV Header
 
@@ -39,8 +38,12 @@ for index, steps in enumerate(step_counts):
     for idx, original_tokens in enumerate(sample):
         sample_index = index  # Compute absolute sample index
 
-        # Decode token IDs to text
+        print(original_tokens)
+    
         decoded_text = tokenizer.decode(original_tokens)
+        
+        # Decode token IDs to text
+        # decoded_text_visual = custom_decode(tokenizer, original_tokens[step])
 
         # Re-tokenize the decoded text
         retokenized_tokens = tokenizer(decoded_text, padding=True, truncation=True)["input_ids"]
@@ -50,7 +53,7 @@ for index, steps in enumerate(step_counts):
 
         canon_bool = 1 if (original_tokens.tolist() == retokenized_tokens) else 0
 
-        edit_distance = dist_canon([original_tokens.tolist()])[0]
+        edit_distance = dist_canon([original_tokens.tolist()], retokenized_tokens)[0]
 
         original_perplexity = compute_perplexity(auto_model, tokenizer, [original_tokens.tolist()]).item()
         retokenized_perplexity = compute_perplexity(auto_model, tokenizer, [retokenized_tokens]).item()
