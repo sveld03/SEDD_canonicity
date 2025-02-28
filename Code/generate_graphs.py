@@ -8,69 +8,72 @@ plt.switch_backend('Agg')
 file_path = "Big_Data/intermediate-data.csv"
 df = pd.read_csv(file_path, low_memory=False)
 
-# Convert relevant columns to numeric
+# Ensure relevant columns are numeric
 df["Step Number"] = pd.to_numeric(df["Step Number"], errors="coerce")
 df["Sample Index"] = pd.to_numeric(df["Sample Index"], errors="coerce")
-df["Canonical?"] = pd.to_numeric(df["Canonical?"], errors="coerce")
+df.dropna(subset=["Step Number", "Sample Index"], inplace=True)
 
-# Drop rows with missing values in these columns
-df.dropna(subset=["Step Number", "Sample Index", "Canonical?"], inplace=True)
+# Create a new column "Mask Count" by counting "[MASK]" occurrences in the "Decoded Text" column
+if "Decoded Text" in df.columns:
+    df["Mask Count"] = df["Decoded Text"].apply(lambda text: text.count("[MASK]") if isinstance(text, str) else 0)
+else:
+    print("Column 'Decoded Text' not found.")
+    exit()
 
-# Sort by sample index and step number
-df.sort_values(["Sample Index", "Step Number"], inplace=True)
+# -------------------------------------------------------------------
+# Part A: Average number of "[MASK]" tokens at each step
+# -------------------------------------------------------------------
+avg_mask_by_step = df.groupby("Step Number")["Mask Count"].mean().reset_index()
+avg_mask_by_step = avg_mask_by_step.sort_values("Step Number")
 
-### Part 1: Frequency of Transition Steps
-
-# Identify the first step at which each sample transitions from canonical (1) to non-canonical (0)
+# -------------------------------------------------------------------
+# Part B: Frequency of transition steps
+# A transition is defined as the step where the last "[MASK]" token is eliminated.
+# For each sample, find the first step where the mask count becomes 0, having been >0 on the previous step.
+# -------------------------------------------------------------------
 transition_steps = []
 for sample_index, group in df.groupby("Sample Index"):
-    group = group.copy()
-    group["Prev_Canonical"] = group["Canonical?"].shift(1)
-    transition_rows = group[(group["Canonical?"] == 0) & (group["Prev_Canonical"] == 1)]
-    if transition_rows.empty:
-        continue  # Skip samples that never transition
-    transition_step = transition_rows.iloc[0]["Step Number"]
-    transition_steps.append(transition_step)
+    group = group.copy().sort_values("Step Number")
+    group["Prev_Mask_Count"] = group["Mask Count"].shift(1)
+    transition = group[(group["Mask Count"] == 0) & (group["Prev_Mask_Count"] > 0)]
+    if not transition.empty:
+        transition_step = transition.iloc[0]["Step Number"]
+        transition_steps.append(transition_step)
 
-# Count frequency of transition steps
+# Count frequency of these transition steps
 transition_counter = Counter(transition_steps)
 transition_steps_sorted = sorted(transition_counter.keys())
-freqs = [transition_counter[s] for s in transition_steps_sorted]
+transition_freqs = [transition_counter[s] for s in transition_steps_sorted]
 
-### Part 2: Percent Canonicity
-
-# For each step (up to 350) compute the percent of samples that are fully canonical
-# (i.e., "Canonical?" == 1)
-df_steps = df[df["Step Number"] <= 350].copy()
-canonicity_by_step = df_steps.groupby("Step Number")["Canonical?"].mean() * 100
-canonicity_by_step = canonicity_by_step.reset_index()
-
-### Plotting
-
+# -------------------------------------------------------------------
+# Plotting
+# -------------------------------------------------------------------
 fig, ax1 = plt.subplots(figsize=(10, 6))
 
-# Bar plot for transition frequency
-ax1.bar(transition_steps_sorted, freqs, width=1.0, color='blue', alpha=0.7, label="Transition Frequency")
+# Bar plot for transition frequency on the primary y-axis (blue)
+ax1.bar(transition_steps_sorted, transition_freqs, width=1.0, color='blue', alpha=0.7, label="Transition Frequency")
 ax1.set_xlabel("Step Number")
-ax1.set_ylabel("Frequency of Transition", color="blue")
+ax1.set_ylabel("Frequency of Transition (Last [MASK] eliminated)", color="blue")
 ax1.tick_params(axis='y', labelcolor="blue")
-ax1.set_title("Transition Frequency and Percent Canonicity vs. Step Number")
 ax1.grid(True)
 
-# Create a second y-axis for percent canonicity
+# Secondary y-axis: Average [MASK] count (red line)
 ax2 = ax1.twinx()
-ax2.plot(canonicity_by_step["Step Number"], canonicity_by_step["Canonical?"], color='red', linewidth=2, label="Percent Canonicity")
-ax2.set_ylabel("Percent Canonicity (%)", color="red")
+ax2.plot(avg_mask_by_step["Step Number"], avg_mask_by_step["Mask Count"], color='red', linewidth=2, label="Avg [MASK] Count")
+ax2.set_ylabel("Average [MASK] Count", color="red")
 ax2.tick_params(axis='y', labelcolor="red")
 
-# Limit the x-axis to 0 to 350 since there are no transitions beyond that point
-ax1.set_xlim(0, 350)
-ax2.set_xlim(0, 350)
+# Limit x-axis to the range where transitions occur
+if transition_steps_sorted:
+    max_step = max(transition_steps_sorted)
+    ax1.set_xlim(0, max_step)
+    ax2.set_xlim(0, max_step)
 
-# Optional: add legends. Since we have two axes, we need to combine them:
+# Combine legends from both axes
 lines1, labels1 = ax1.get_legend_handles_labels()
 lines2, labels2 = ax2.get_legend_handles_labels()
 ax1.legend(lines1 + lines2, labels1 + labels2, loc='upper right')
 
+plt.title("Average [MASK] Count and Transition Frequency vs. Step Number")
 plt.tight_layout()
-plt.savefig("transition_and_canonicity_frequency.png", dpi=300, bbox_inches='tight')
+plt.savefig("mask_transition_frequency.png", dpi=300, bbox_inches='tight')
