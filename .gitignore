@@ -20,4 +20,4 @@ assets/
 core
 **.log
 *.jsonl
-intermediate-data.csv
+Big_Data/
