@@ -21,7 +21,7 @@ The most recent stages of research have focused on investigating the emergence o
 
 ## Findings
 
-All visualizations referenced below can be found in the /Graphs folder.
+All visualizations referenced below can be found in the Graphs/ folder.
 
 Key findings from the preliminary research:
 1. canonicity_plot.png: As expected, longer model outputs are less likely to be canonical. The plot also illustrates the fact that tokens are not generated independently (where we would expect to see exponential decay of canonicity).
