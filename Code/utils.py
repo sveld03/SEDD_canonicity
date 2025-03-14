@@ -89,24 +89,6 @@ def collapse_mask_tokens(text):
     # Clean up extra whitespace.
     return re.sub(r'\s+', ' ', collapsed_text).strip()
 
-# def custom_decode(tokenizer, token_ids):
-#     """ Decodes token IDs into text, explicitly displaying '[MASK]' instead of removing it. """
-#     token_strings = [tokenizer.decode([t]) for t in token_ids]
-#     # tokens = tokenizer.convert_ids_to_tokens(token_ids)
-#     tokens = [" [MASK] " if tok_id == 50257 else tok for tok, tok_id in zip(token_strings, token_ids)]
-#     return "".join(tokens)  # Join tokens into a readable string
-
-# def custom_encode(tokenizer, text):
-#     """Encodes text into token IDs, ensuring '[MASK]' gets correctly mapped back to token ID 50257."""
-#     # Replace explicit "[MASK]" with a space, ensuring it's processed correctly
-#     text = text.replace(" [MASK] ", tokenizer.pad_token)  
-#     tokens = tokenizer(text, add_special_tokens=False)["input_ids"]
-
-#     # Manually replace PAD token ID (if present) back to 50257 for [MASK]
-#     tokens = [50257 if tok == tokenizer.pad_token_id else tok for tok in tokens]
-    
-#     return tokens
-
 def custom_decode(tokenizer, token_ids):
     """Decodes token IDs into text, explicitly displaying '[MASK]' for token ID 50257.
     
@@ -119,13 +101,13 @@ def custom_decode(tokenizer, token_ids):
         if t == 50257:  # mask token
             if current_segment:
                 # Decode the accumulated non-mask tokens together.
-                output_parts.append(tokenizer.decode(current_segment, clean_up_tokenization_spaces=False))
+                output_parts.append(tokenizer.decode(current_segment))
                 current_segment = []
             output_parts.append(" [MASK] ")
         else:
             current_segment.append(t)
     if current_segment:
-        output_parts.append(tokenizer.decode(current_segment, clean_up_tokenization_spaces=False))
+        output_parts.append(tokenizer.decode(current_segment))
     
     # Combine the parts into a single string.
     return "".join(output_parts)

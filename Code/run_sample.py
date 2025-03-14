@@ -28,7 +28,7 @@ def main():
     # for step, text in intermediate_states.items():
      #   print(f"Step {step}: {text}\n")
 
-    print(tokenizer.decode([58, 31180, 42, 60, 2644, 685, 31180, 42, 60]))
+    print(tokenizer.decode([247]))
     # print(tokenizer.decode([628]))
 
     # print(f"final: {final_state.tolist()}")
