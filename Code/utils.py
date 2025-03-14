@@ -89,10 +89,6 @@ def collapse_mask_tokens(text):
     # Clean up extra whitespace.
     return re.sub(r'\s+', ' ', collapsed_text).strip()
 
-def show_all_tokens(token_ids):
-    """Displays all tokens in the token_ids list, including special tokens."""
-    return [tokenizer.decode([t], clean_up_tokenization_spaces=False) for t in token_ids]
-
 # def custom_decode(tokenizer, token_ids):
 #     """ Decodes token IDs into text, explicitly displaying '[MASK]' instead of removing it. """
 #     token_strings = [tokenizer.decode([t]) for t in token_ids]
@@ -178,54 +174,54 @@ def dist_canon(original_tokens: list, retokenized_tokens: list) -> np.ndarray:
         retokenized_tokens = retokenized_tokens.tolist()
     return np.array([Levenshtein.distance(original_tokens, retokenized_tokens)])
 
-def process_token_sequence(token_ids: list[int], tokenizer, mask_token_id: int = 50257) -> list[dict[str, any]]:
-    """
-    Process a token sequence by splitting on mask tokens.
+# def process_token_sequence(token_ids: list[int], tokenizer, mask_token_id: int = 50257) -> list[dict[str, any]]:
+#     """
+#     Process a token sequence by splitting on mask tokens.
     
-    For each non-empty segment (a contiguous block of tokens not equal to mask_token_id):
-      - Decode the segment using tokenizer.decode.
-      - Re-encode the decoded text (using tokenizer.encode or a custom_encode).
-      - Compare the original segment and re-encoded segment.
+#     For each non-empty segment (a contiguous block of tokens not equal to mask_token_id):
+#       - Decode the segment using tokenizer.decode.
+#       - Re-encode the decoded text (using tokenizer.encode or a custom_encode).
+#       - Compare the original segment and re-encoded segment.
     
-    Returns a list of dictionaries containing the results for each segment.
-    """
-    segments = []
-    current_segment = []
+#     Returns a list of dictionaries containing the results for each segment.
+#     """
+#     segments = []
+#     current_segment = []
     
-    # Split tokens into segments separated by mask tokens.
-    for token in token_ids:
-        if token == mask_token_id:
-            if current_segment:
-                segments.append(current_segment)
-                current_segment = []
-            # If current_segment is empty, ignore this mask (or optionally record an empty segment)
-        else:
-            current_segment.append(token)
-    if current_segment:
-        segments.append(current_segment)
+#     # Split tokens into segments separated by mask tokens.
+#     for token in token_ids:
+#         if token == mask_token_id:
+#             if current_segment:
+#                 segments.append(current_segment)
+#                 current_segment = []
+#             # If current_segment is empty, ignore this mask (or optionally record an empty segment)
+#         else:
+#             current_segment.append(token)
+#     if current_segment:
+#         segments.append(current_segment)
     
-    results = []
-    for seg in segments:
-        # Decode the segment independently.
-        decoded_text = tokenizer.decode(seg, clean_up_tokenization_spaces=False)
-        # Re-encode the decoded text.
-        # (Optionally, you can use your custom_encode function here if needed.)
-        reencoded = tokenizer.encode(decoded_text, add_special_tokens=False)
-        # Calculate the edit distance between the original segment and the re-encoded segment.
-        distance = dist_canon(seg, reencoded)
-        # Determine if the segment is canonical (i.e. the same after re-tokenization).
-        is_canonical = (seg == reencoded)
+#     results = []
+#     for seg in segments:
+#         # Decode the segment independently.
+#         decoded_text = tokenizer.decode(seg, clean_up_tokenization_spaces=False)
+#         # Re-encode the decoded text.
+#         # (Optionally, you can use your custom_encode function here if needed.)
+#         reencoded = tokenizer.encode(decoded_text, add_special_tokens=False)
+#         # Calculate the edit distance between the original segment and the re-encoded segment.
+#         distance = dist_canon(seg, reencoded)
+#         # Determine if the segment is canonical (i.e. the same after re-tokenization).
+#         is_canonical = (seg == reencoded)
         
-        # Store any non-canonical differences if desired (here, we simply store the edit distance)
-        results.append({
-            "original_segment": seg,
-            "decoded_text": decoded_text,
-            "reencoded_segment": reencoded,
-            "is_canonical": is_canonical,
-            "edit_distance": distance
-        })
+#         # Store any non-canonical differences if desired (here, we simply store the edit distance)
+#         results.append({
+#             "original_segment": seg,
+#             "decoded_text": decoded_text,
+#             "reencoded_segment": reencoded,
+#             "is_canonical": is_canonical,
+#             "edit_distance": distance
+#         })
     
-    return results
+#     return results
 
 def canon(X: list) -> list:
     f = tokenizer.decode if np.issubdtype(type(X[0]), np.integer) else tokenizer.batch_decode

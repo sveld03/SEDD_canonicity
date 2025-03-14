@@ -6,7 +6,7 @@ from run_sample import sample_tokens
 from load_model import load_model
 from datetime import datetime
 import Levenshtein
-from utils import compute_perplexity, rhloglikelihood, custom_decode, custom_encode, uncanons, dist_canon, show_all_tokens
+from utils import compute_perplexity, rhloglikelihood, custom_decode, custom_encode, uncanons, dist_canon, collapse_mask_tokens
 
 start_time = datetime.now() 
 
@@ -26,7 +26,7 @@ token_count = 1024   # Fixed token count
 step_counts = [1024]
 
 # Open CSV file for writing and store results incrementally
-csv_filename = "3-13-test-inter-b.csv"
+csv_filename = "3-13-test-inter-j.csv"
 with open(csv_filename, "w") as f:
     f.write("Token Count,Step Count,Sample Index,Step Number,Original Tokens,Decoded Text,Retokenized Tokens,Canonical?,Edit Distance,Original Perplexity,Retokenized Perplexity,Non-Canonicals,Canonicals\n")  # CSV Header
 
@@ -42,12 +42,13 @@ for steps in step_counts:
         results = []
         for step, original_sequence in samples.items():
 
-            # if step == 10:
-            #     break # limit the number of steps for testing
+            if step == 10:
+                break # limit the number of steps for testing
 
             sample_index = (batch_num) * batch_size  # Compute absolute sample index
 
             original_tokens = original_sequence[0]
+            original_tokens_cpy = original_tokens.copy()
 
             # if step == 0:
             #     decoded_text = 
@@ -55,15 +56,18 @@ for steps in step_counts:
             # Decode token IDs to text
             decoded_text = custom_decode(tokenizer, original_tokens)
 
+            decoded_text_display = collapse_mask_tokens(decoded_text)
+
             # Re-tokenize the decoded text
             retokenized_tokens = custom_encode(tokenizer, decoded_text)
+            retokenized_tokens_cpy = retokenized_tokens.copy()
 
             canon_bool = 1 if (original_tokens == retokenized_tokens) else 0
 
             edit_distance = dist_canon(original_tokens, retokenized_tokens)[0]
 
-            original_perplexity = compute_perplexity(auto_model, tokenizer, [original_tokens])
-            retokenized_perplexity = 0 #compute_perplexity(auto_model, tokenizer, [retokenized_tokens])
+            original_perplexity = compute_perplexity(auto_model, tokenizer, [original_tokens_cpy])
+            retokenized_perplexity = compute_perplexity(auto_model, tokenizer, [retokenized_tokens_cpy])
 
             # Identify non-canonical and canonical tokenizations using `uncanons()`
             uncanons_output = uncanons(original_tokens, retokenized_tokens)
@@ -85,7 +89,7 @@ for steps in step_counts:
                 sample_index,
                 step,
                 str(original_tokens),  # Store as string to avoid issues
-                decoded_text.replace("\n", " "),  # Replace newlines for CSV safety
+                decoded_text_display.replace("\n", " "),  # Replace newlines for CSV safety
                 str(retokenized_tokens),
                 canon_bool,
                 edit_distance,
