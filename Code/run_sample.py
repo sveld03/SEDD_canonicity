@@ -28,8 +28,8 @@ def main():
     # for step, text in intermediate_states.items():
      #   print(f"Step {step}: {text}\n")
 
-    print(tokenizer.decode([247]))
-    # print(tokenizer.decode([628]))
+    print(tokenizer.decode([320]))
+    print(tokenizer.decode([12078]))
 
     # print(f"final: {final_state.tolist()}")
     # parser = argparse.ArgumentParser(description="Generate some samples")

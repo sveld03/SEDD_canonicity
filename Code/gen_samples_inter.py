@@ -19,16 +19,16 @@ tokenizer.pad_token = tokenizer.eos_token  # Ensure padding token is set
 auto_model = AutoModelForCausalLM.from_pretrained("gpt2").to("cuda:2")
 
 # Define parameters
-total_samples = 2  # Total samples required per step count
+total_samples = 100  # Total samples required per step count
 batch_size = 1      # Generate only 1 at a time
 token_count = 1024   # Fixed token count
 # step_counts = [10, 25, 50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1200]
 step_counts = [1024]
 
 # Open CSV file for writing and store results incrementally
-csv_filename = "3-13-test-inter-x.csv"
+csv_filename = "intermediate-data-2.csv"
 with open(csv_filename, "w") as f:
-    f.write("Token Count,Step Count,Sample Index,Step Number,Original Tokens,Decoded Text,Retokenized Tokens,Canonical?,Edit Distance,Original Perplexity,Retokenized Perplexity,Non-Canonicals,Canonicals\n")  # CSV Header
+    f.write("Token Count,Step Count,Sample Index,Step Number,Original Tokens,Decoded Text,Retokenized Tokens,Canonical?,Edit Distance,Original Perplexity,Retokenized Perplexity,Non-Canonical IDs,Canonical IDs,Non-Canonical Strings,Canonical Strings\n")  # CSV Header
 
 # Generate samples
 for steps in step_counts:
@@ -45,10 +45,10 @@ for steps in step_counts:
             # if step == 10:
             #     break # limit the number of steps for testing
 
-            if step % 100 != 5:
-                continue
+            # if step % 100 != 1 and step != steps:
+            #     continue
 
-            sample_index = (batch_num) * batch_size  # Compute absolute sample index
+            sample_index = (batch_num+30) * batch_size  # Compute absolute sample index
 
             original_tokens = original_sequence[0]
             # original_tokens_cpy = original_tokens.copy()
@@ -70,20 +70,53 @@ for steps in step_counts:
             edit_distance = dist_canon(original_tokens, retokenized_tokens)[0]
 
             original_perplexity = compute_perplexity(auto_model, tokenizer, [original_tokens])
-            retokenized_perplexity = compute_perplexity(auto_model, tokenizer, [retokenized_tokens])
+            retokenized_perplexity = compute_perplexity(auto_model, tokenizer, [retokenized_tokens[:1024]])  # Limit to 1024 tokens for perplexity calculation
 
             # Identify non-canonical and canonical tokenizations using `uncanons()`
-            uncanons_output = uncanons(original_tokens, retokenized_tokens)
-            non_canonical_list, canonical_list = [], []
+            # uncanons_output = uncanons(original_tokens, retokenized_tokens, tokenizer)
+            # non_canonical_list, canonical_list = [], []
 
-            for position, token_pairs in uncanons_output.items():
-                for non_canon, canon in token_pairs:
-                    non_canonical_list.append(" ".join(map(str, non_canon)))  # Convert to readable format
-                    canonical_list.append(" ".join(map(str, canon)))
+            # for position, token_pairs in uncanons_output.items():
+            #     for non_canon, canon in token_pairs:
+            #         non_canonical_list.append(" ".join(map(str, non_canon)))  # Convert to readable format
+            #         canonical_list.append(" ".join(map(str, canon)))
 
-            # Join mismatches into a single string (or "None" if empty)
-            non_canonical_str = "; ".join(non_canonical_list) if non_canonical_list else "None"
-            canonical_str = "; ".join(canonical_list) if canonical_list else "None"
+            dist, segments = uncanons(original_tokens, retokenized_tokens, tokenizer)
+
+            if step % 100 == 1 or step == steps+1:
+                non_canonical_list_tokens = []
+                canonical_list_tokens = []
+                
+                non_canonical_list_text = []
+                canonical_list_text = []
+
+                # Iterate over the segments returned by the new function
+                for seg in segments:
+                    # seg["original_tokens"] is a list of token IDs that differ in this segment
+                    # seg["canonical_tokens"] is the corresponding list of token IDs in the canonical sequence
+                    non_canonical_list_tokens.append(", ".join(map(str, seg["original_tokens"])))
+                    canonical_list_tokens.append(", ".join(map(str, seg["canonical_tokens"])))
+
+                # Join mismatches into a single string (or "None" if empty)
+                non_canonical_tokens = "; ".join(non_canonical_list_tokens) if non_canonical_list_tokens else "None"
+                canonical_tokens = "; ".join(canonical_list_tokens) if canonical_list_tokens else "None"
+                
+                # Iterate over the segments returned by the new function
+                for seg in segments:
+                    # seg["original_tokens"] is a list of token IDs that differ in this segment
+                    # seg["canonical_tokens"] is the corresponding list of token IDs in the canonical sequence
+                    non_canonical_list_text.append(" ".join(map(str, seg["original_text"])))
+                    canonical_list_text.append(" ".join(map(str, seg["canonical_text"])))
+
+                # Join mismatches into a single string (or "None" if empty)
+                non_canonical_str = "; ".join(non_canonical_list_text) if non_canonical_list_text else "None"
+                canonical_str = "; ".join(canonical_list_text) if canonical_list_text else "None"
+
+            else:
+                non_canonical_tokens = "N/A"
+                canonical_tokens = "N/A"
+                non_canonical_str = "N/A"
+                canonical_str = "N/A"
 
             # Append results as a CSV row
             results.append([
@@ -98,12 +131,14 @@ for steps in step_counts:
                 edit_distance,
                 original_perplexity,
                 retokenized_perplexity,
+                non_canonical_tokens,
+                canonical_tokens,
                 non_canonical_str,
                 canonical_str
             ])
 
         # Append data to CSV file in batches
-        df = pd.DataFrame(results, columns=["Token Count", "Step Count", "Sample Index", "Step Number", "Original Tokens", "Decoded Text", "Retokenized Tokens", "Canonical?", "Edit Distance", "Original Perplexity", "Retokenized Perplexity", "Non-Canonicals", "Canonicals"])
+        df = pd.DataFrame(results, columns=["Token Count", "Step Count", "Sample Index", "Step Number", "Original Tokens", "Decoded Text", "Retokenized Tokens", "Canonical?", "Edit Distance", "Original Perplexity", "Retokenized Perplexity", "Non-Canonical Tokens", "Canonical Tokens", "Non-Canonical Strings", "Canonical Strings"])
         df.to_csv(csv_filename, mode='a', header=False, index=False)  # Append mode
 
 print(f"Sample generation complete. Data saved to '{csv_filename}'.")

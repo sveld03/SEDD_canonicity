@@ -210,32 +210,157 @@ def canon(X: list) -> list:
     s = f(X, skip_special_tokens=False)
     return tokenizer(s, add_special_tokens=False)["input_ids"]
 
-def uncanons(V: list, V_canon: list = None) -> dict:
-    if isinstance(V[0], torch.Tensor): V = V.cpu().numpy()
-    if V_canon is None: V_canon = canon(V)
-    O, c = collections.defaultdict(list), 0
-    l_u, l_v = 0, 0
-    i, j, start_i, start_j = 0, 0, 0, 0
-    move_i, move_j = True, True
-    while (i < len(V)) and (j < len(V_canon)):
-        u, v = V[i], V_canon[j]
-        l_u += len(custom_decode(tokenizer, [u])) if move_i else 0
-        l_v += len(custom_decode(tokenizer, [v])) if move_j else 0
-        move_i, move_j = False, False
-        if l_u >= l_v:
-            j += 1
-            move_j = True
-        if l_v >= l_u:
-            i += 1
-            move_i = True
-        if l_u != l_v:
-            if c == 0: start_i, start_j = i-move_i, j-move_j
-            c += 1
-        elif c > 0:
-            O[i-start_i].append(([custom_decode(tokenizer, [V[x]]) for x in range(start_i, i)],
-                                 [custom_decode(tokenizer, [V_canon[y]]) for y in range(start_j, j)]))
-            c = 0
-    return O
+import numpy as np
+
+def align_token_sequences(orig_ids, canon_ids):
+    """
+    Perform a standard Levenshtein-style alignment of two token sequences.
+    Returns:
+      dp[-1][-1]: the edit distance,
+      alignment: a list of tuples (orig_token, canon_token, action)
+        where action is one of:
+          'match'       (tokens match exactly)
+          'substitute'  (tokens differ)
+          'insert'      (token was inserted in canon_ids)
+          'delete'      (token was deleted from orig_ids)
+    """
+    m, n = len(orig_ids), len(canon_ids)
+
+    # dp[i][j] = minimal edit distance between
+    #   orig_ids[:i] and canon_ids[:j]
+    dp = np.zeros((m+1, n+1), dtype=int)
+    backpointer = np.zeros((m+1, n+1), dtype='<U10')  # store strings like 'match','sub','ins','del'
+
+    # Initialize first row/col
+    for i in range(1, m+1):
+        dp[i][0] = i
+        backpointer[i][0] = 'delete'
+    for j in range(1, n+1):
+        dp[0][j] = j
+        backpointer[0][j] = 'insert'
+
+    # Fill in the DP table
+    for i in range(1, m+1):
+        for j in range(1, n+1):
+            if orig_ids[i-1] == canon_ids[j-1]:
+                # match
+                dp[i][j] = dp[i-1][j-1]
+                backpointer[i][j] = 'match'
+            else:
+                # consider substitute, insert, or delete
+                costs = [
+                    (dp[i-1][j-1] + 1, 'substitute'),  # replace orig_ids[i-1] with canon_ids[j-1]
+                    (dp[i][j-1] + 1, 'insert'),        # insert canon_ids[j-1] into orig at position i
+                    (dp[i-1][j] + 1, 'delete')         # delete orig_ids[i-1]
+                ]
+                cost, action = min(costs, key=lambda x: x[0])
+                dp[i][j] = cost
+                backpointer[i][j] = action
+
+    # Reconstruct alignment from backpointers
+    alignment = []
+    i, j = m, n
+    while i > 0 or j > 0:
+        action = backpointer[i][j]
+        if action == 'match':
+            alignment.append((orig_ids[i-1], canon_ids[j-1], 'match'))
+            i -= 1
+            j -= 1
+        elif action == 'substitute':
+            alignment.append((orig_ids[i-1], canon_ids[j-1], 'substitute'))
+            i -= 1
+            j -= 1
+        elif action == 'insert':
+            alignment.append((None, canon_ids[j-1], 'insert'))
+            j -= 1
+        elif action == 'delete':
+            alignment.append((orig_ids[i-1], None, 'delete'))
+            i -= 1
+        else:
+            # Beginning of table (could be empty sequences)
+            if i > 0:
+                alignment.append((orig_ids[i-1], None, 'delete'))
+                i -= 1
+            elif j > 0:
+                alignment.append((None, canon_ids[j-1], 'insert'))
+                j -= 1
+
+    alignment.reverse()
+    return dp[m][n], alignment
+
+def uncanons(orig_ids, canon_ids, tokenizer):
+    """
+    Returns:
+      - edit_distance: the minimal token-level edit distance
+      - segments: a list of dicts, each describing a 'non-canonical' chunk
+                  with the original tokens and the canonical tokens.
+    """
+    dist, alignment = align_token_sequences(orig_ids, canon_ids)
+    
+    segments = []
+    current_orig = []
+    current_canon = []
+
+    def flush_segment():
+        if current_orig or current_canon:
+            segments.append({
+                "original_tokens": current_orig.copy(),
+                "canonical_tokens": current_canon.copy()
+            })
+            current_orig.clear()
+            current_canon.clear()
+
+    for (orig_token, canon_token, action) in alignment:
+        if action == 'match':
+            # If we were in a differing region, flush it
+            flush_segment()
+        else:
+            # This is a difference, accumulate in the current segment
+            if orig_token is not None:
+                current_orig.append(orig_token)
+            if canon_token is not None:
+                current_canon.append(canon_token)
+
+    # Flush any leftover segment
+    flush_segment()
+
+    # Convert token IDs to text if desired, or leave them as IDs
+    # Example: decode them (but watch out for [MASK] if you want to display it literally)
+    for seg in segments:
+        seg["original_text"] = tokenizer.decode(seg["original_tokens"], clean_up_tokenization_spaces=False) \
+            if seg["original_tokens"] else ""
+        seg["canonical_text"] = tokenizer.decode(seg["canonical_tokens"], clean_up_tokenization_spaces=False) \
+            if seg["canonical_tokens"] else ""
+
+    return dist, segments
+
+
+# def uncanons(V: list, V_canon: list = None) -> dict:
+#     if isinstance(V[0], torch.Tensor): V = V.cpu().numpy()
+#     if V_canon is None: V_canon = canon(V)
+#     O, c = collections.defaultdict(list), 0
+#     l_u, l_v = 0, 0
+#     i, j, start_i, start_j = 0, 0, 0, 0
+#     move_i, move_j = True, True
+#     while (i < len(V)) and (j < len(V_canon)):
+#         u, v = V[i], V_canon[j]
+#         l_u += len(custom_decode(tokenizer, [u])) if move_i else 0
+#         l_v += len(custom_decode(tokenizer, [v])) if move_j else 0
+#         move_i, move_j = False, False
+#         if l_u >= l_v:
+#             j += 1
+#             move_j = True
+#         if l_v >= l_u:
+#             i += 1
+#             move_i = True
+#         if l_u != l_v:
+#             if c == 0: start_i, start_j = i-move_i, j-move_j
+#             c += 1
+#         elif c > 0:
+#             O[i-start_i].append(([custom_decode(tokenizer, [V[x]]) for x in range(start_i, i)],
+#                                  [custom_decode(tokenizer, [V_canon[y]]) for y in range(start_j, j)]))
+#             c = 0
+#     return O
 
 def find_unmasked_indices(prev_tokens, current_tokens):
     return [i for i, (p, c) in enumerate(zip(prev_tokens, current_tokens)) if p != c]
