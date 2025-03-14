@@ -19,14 +19,14 @@ tokenizer.pad_token = tokenizer.eos_token  # Ensure padding token is set
 auto_model = AutoModelForCausalLM.from_pretrained("gpt2").to("cuda:2")
 
 # Define parameters
-total_samples = 45  # Total samples required per step count
-batch_size = 1      # Generate only 5 at a time
+total_samples = 2  # Total samples required per step count
+batch_size = 1      # Generate only 1 at a time
 token_count = 1024   # Fixed token count
 # step_counts = [10, 25, 50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1200]
 step_counts = [1024]
 
 # Open CSV file for writing and store results incrementally
-csv_filename = "intermediate-data-2.csv"
+csv_filename = "3-13-test-inter-4.csv"
 with open(csv_filename, "w") as f:
     f.write("Token Count,Step Count,Sample Index,Step Number,Original Tokens,Decoded Text,Retokenized Tokens,Canonical?,Edit Distance,Original Perplexity,Retokenized Perplexity,Non-Canonicals,Canonicals\n")  # CSV Header
 
@@ -46,21 +46,21 @@ for steps in step_counts:
             original_tokens = original_sequence[0]
                 
             # Decode token IDs to text
-            decoded_text = custom_decode(tokenizer, original_tokens)
+            decoded_text = original_tokens # custom_decode(tokenizer, original_tokens)
 
 
             # Re-tokenize the decoded text
-            retokenized_tokens = custom_encode(tokenizer, decoded_text)
+            retokenized_tokens = original_tokens #custom_encode(tokenizer, decoded_text)
 
-            canon_bool = 1 if (original_tokens == retokenized_tokens) else 0
+            canon_bool = 0 #1 if (original_tokens == retokenized_tokens) else 0
 
-            edit_distance = dist_canon(original_tokens, retokenized_tokens)[0]
+            edit_distance = 0 #dist_canon(original_tokens, retokenized_tokens)[0]
 
-            original_perplexity = compute_perplexity(auto_model, tokenizer, [original_tokens])
-            retokenized_perplexity = compute_perplexity(auto_model, tokenizer, [retokenized_tokens])
+            original_perplexity = 0 #compute_perplexity(auto_model, tokenizer, [original_tokens])
+            retokenized_perplexity = 0 #compute_perplexity(auto_model, tokenizer, [retokenized_tokens])
 
             # Identify non-canonical and canonical tokenizations using `uncanons()`
-            uncanons_output = uncanons(original_tokens, retokenized_tokens)
+            uncanons_output = {} #uncanons(original_tokens, retokenized_tokens)
             non_canonical_list, canonical_list = [], []
 
             for position, token_pairs in uncanons_output.items():
@@ -79,7 +79,8 @@ for steps in step_counts:
                 sample_index,
                 step,
                 str(original_tokens),  # Store as string to avoid issues
-                decoded_text.replace("\n", " "),  # Replace newlines for CSV safety
+                str(decoded_text),
+                #decoded_text.replace("\n", " "),  # Replace newlines for CSV safety
                 str(retokenized_tokens),
                 canon_bool,
                 edit_distance,

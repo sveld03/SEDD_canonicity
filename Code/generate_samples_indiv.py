@@ -20,10 +20,10 @@ auto_model = AutoModelForCausalLM.from_pretrained("gpt2").to("cuda:2")
 
 # Define parameters
 token_count = 1024   # Fixed token count
-step_counts = [100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110] # list(range(1, 200, 1))
+step_counts = [1024, 1024] # list(range(1, 200, 1))
 
 # Open CSV file for writing and store results incrementally
-csv_filename = "indivs-test-2-27.csv"
+csv_filename = "3-13-test-2.csv"
 with open(csv_filename, "w") as f:
     f.write("Token Count,Step Count,Sample Index,Original Tokens,Retokenized Tokens,Original Token Strings,Retokenized Token Strings,Decoded Text,Canonical?,Edit Distance,Original Perplexity,Retokenized Perplexity,Non-Canonicals,Canonicals\n")  # CSV Header
 
@@ -38,7 +38,7 @@ for index, steps in enumerate(step_counts):
     for idx, original_tokens in enumerate(sample):
         sample_index = index  # Compute absolute sample index
 
-        print(original_tokens)
+        # print(original_tokens)
     
         decoded_text = tokenizer.decode(original_tokens)
         
@@ -53,7 +53,7 @@ for index, steps in enumerate(step_counts):
 
         canon_bool = 1 if (original_tokens.tolist() == retokenized_tokens) else 0
 
-        edit_distance = dist_canon([original_tokens.tolist()], retokenized_tokens)[0]
+        edit_distance = dist_canon(original_tokens.tolist(), retokenized_tokens)[0]
 
         original_perplexity = compute_perplexity(auto_model, tokenizer, [original_tokens.tolist()]).item()
         retokenized_perplexity = compute_perplexity(auto_model, tokenizer, [retokenized_tokens]).item()
