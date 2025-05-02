@@ -1,3 +1,6 @@
+# Nothing changed from Aaron's GitHub;
+# This script was never used because we did not use conditional sampling.
+
 import torch
 import argparse
 

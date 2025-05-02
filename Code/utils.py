@@ -1,3 +1,5 @@
+# This file contains a variety of helper functions used throughout the project.
+
 import torch
 
 import os
@@ -156,55 +158,6 @@ def dist_canon(original_tokens: list, retokenized_tokens: list) -> np.ndarray:
         retokenized_tokens = retokenized_tokens.tolist()
     return np.array([Levenshtein.distance(original_tokens, retokenized_tokens)])
 
-# def process_token_sequence(token_ids: list[int], tokenizer, mask_token_id: int = 50257) -> list[dict[str, any]]:
-#     """
-#     Process a token sequence by splitting on mask tokens.
-    
-#     For each non-empty segment (a contiguous block of tokens not equal to mask_token_id):
-#       - Decode the segment using tokenizer.decode.
-#       - Re-encode the decoded text (using tokenizer.encode or a custom_encode).
-#       - Compare the original segment and re-encoded segment.
-    
-#     Returns a list of dictionaries containing the results for each segment.
-#     """
-#     segments = []
-#     current_segment = []
-    
-#     # Split tokens into segments separated by mask tokens.
-#     for token in token_ids:
-#         if token == mask_token_id:
-#             if current_segment:
-#                 segments.append(current_segment)
-#                 current_segment = []
-#             # If current_segment is empty, ignore this mask (or optionally record an empty segment)
-#         else:
-#             current_segment.append(token)
-#     if current_segment:
-#         segments.append(current_segment)
-    
-#     results = []
-#     for seg in segments:
-#         # Decode the segment independently.
-#         decoded_text = tokenizer.decode(seg, clean_up_tokenization_spaces=False)
-#         # Re-encode the decoded text.
-#         # (Optionally, you can use your custom_encode function here if needed.)
-#         reencoded = tokenizer.encode(decoded_text, add_special_tokens=False)
-#         # Calculate the edit distance between the original segment and the re-encoded segment.
-#         distance = dist_canon(seg, reencoded)
-#         # Determine if the segment is canonical (i.e. the same after re-tokenization).
-#         is_canonical = (seg == reencoded)
-        
-#         # Store any non-canonical differences if desired (here, we simply store the edit distance)
-#         results.append({
-#             "original_segment": seg,
-#             "decoded_text": decoded_text,
-#             "reencoded_segment": reencoded,
-#             "is_canonical": is_canonical,
-#             "edit_distance": distance
-#         })
-    
-#     return results
-
 def canon(X: list) -> list:
     f = tokenizer.decode if np.issubdtype(type(X[0]), np.integer) else tokenizer.batch_decode
     s = f(X, skip_special_tokens=False)
@@ -333,34 +286,6 @@ def uncanons(orig_ids, canon_ids, tokenizer):
             if seg["canonical_tokens"] else ""
 
     return dist, segments
-
-
-# def uncanons(V: list, V_canon: list = None) -> dict:
-#     if isinstance(V[0], torch.Tensor): V = V.cpu().numpy()
-#     if V_canon is None: V_canon = canon(V)
-#     O, c = collections.defaultdict(list), 0
-#     l_u, l_v = 0, 0
-#     i, j, start_i, start_j = 0, 0, 0, 0
-#     move_i, move_j = True, True
-#     while (i < len(V)) and (j < len(V_canon)):
-#         u, v = V[i], V_canon[j]
-#         l_u += len(custom_decode(tokenizer, [u])) if move_i else 0
-#         l_v += len(custom_decode(tokenizer, [v])) if move_j else 0
-#         move_i, move_j = False, False
-#         if l_u >= l_v:
-#             j += 1
-#             move_j = True
-#         if l_v >= l_u:
-#             i += 1
-#             move_i = True
-#         if l_u != l_v:
-#             if c == 0: start_i, start_j = i-move_i, j-move_j
-#             c += 1
-#         elif c > 0:
-#             O[i-start_i].append(([custom_decode(tokenizer, [V[x]]) for x in range(start_i, i)],
-#                                  [custom_decode(tokenizer, [V_canon[y]]) for y in range(start_j, j)]))
-#             c = 0
-#     return O
 
 def find_unmasked_indices(prev_tokens, current_tokens):
     return [i for i, (p, c) in enumerate(zip(prev_tokens, current_tokens)) if p != c]

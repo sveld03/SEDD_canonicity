@@ -1,3 +1,5 @@
+# Nothing changed from Aaron's GitHub
+
 import os
 import torch
 from model import SEDD
@@ -38,14 +40,3 @@ def load_model(root_dir, device):
         return load_model_hf(root_dir, device)
     except:
         return load_model_local(root_dir, device)
-
-#pretrained_small_model, graph, noise = load_model("louaaron/sedd-small", "cuda")
-# pretrained_medium_model, graph, noise = load_model("louaaron/sedd-medium")
-# local_model, graph, noise = load_model("sedd-small", "cuda")
-
-# Load model directly
-#from transformers import AutoModel
-#model = AutoModel.from_pretrained("louaaron/sedd-medium")
-
-# from transformers import AutoModelForSeq2SeqLM
-# model = AutoModelForSeq2SeqLM.from_pretrained("louaaron/sedd-small")

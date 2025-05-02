@@ -1,3 +1,6 @@
+# Nothing changed from Aaron's GitHub;
+# This script was never used because the model came pretrained.
+
 import datetime
 import os
 import os.path

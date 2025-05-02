@@ -23,6 +23,11 @@ The most recent stages of research have focused on investigating the emergence o
 
 All visualizations referenced below can be found in the Graphs/ folder.
 
+(NOTE: there is a nuanced difference between two types of graphs in the Graphs folder. All graphs that use the phrase
+"Step Count" on the x-axis are measuring how a certain property varies *for the final sample* when a different number
+of reverse diffusion steps are used. All graphs that use the phrase "Step Number" on the x-axis are measuring how a certain
+property varies *over the course of the denoising process.*)
+
 Key findings from the preliminary research:
 1. canonicity_plot.png: As expected, longer model outputs are less likely to be canonical. The plot also illustrates the fact that tokens are not generated independently (where we would expect to see exponential decay of canonicity).
 2. log_likelihood_plot.png and log_likelihood_difference.png: The non-canonical log-likelihood was consistently higher than the canonical log-likelihood. While initially an unexpected result, this naturally stems from the fact that non-canonical tokens tend to only be generated when they are sampled with higher probability than canonical tokens, thus by definition resulting in a higher log-likelihood than the canonically retokenized sequence. One suprising element of this finding is the fact that this holds true despite the fact that log-likelihood was evaluated using GPT-2, indicating a remarkable similarity in the behavior of SEDD and GPT-2.

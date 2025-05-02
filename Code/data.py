@@ -1,49 +1,79 @@
-import re
-from transformers import GPT2TokenizerFast
-from datasets import load_dataset
-from itertools import chain
-import numpy as np
-import torch
+"""
+This module provides functionality for loading, preprocessing, and tokenizing various text datasets
+including WikiText, PTB, and LAMBADA. It includes custom detokenizers for different datasets and
+handles the creation of data loaders for training and evaluation.
+"""
 
+import re
+import json
 import urllib.request
 import zipfile
 import requests
-import json
-from datasets import Dataset
-
+import numpy as np
+import torch
+from transformers import GPT2TokenizerFast
+from datasets import load_dataset, Dataset
 from torch.utils.data import DataLoader, DistributedSampler
+from itertools import chain
 
-
+# -------------------------------
+# Data Loading Utilities
+# -------------------------------
 def cycle_loader(dataloader, sampler=None):
-    while 1:
+    """
+    Creates an infinite cycle through the dataloader.
+    
+    Args:
+        dataloader (DataLoader): The dataloader to cycle through
+        sampler (DistributedSampler, optional): Sampler for distributed training
+        
+    Yields:
+        dict: Batches of data from the dataloader
+    """
+    while True:
         if sampler is not None:
             sampler.set_epoch(np.random.randint(0, 100000))
         for data in dataloader:
             yield data
 
-
+# -------------------------------
+# Detokenization Functions
+# -------------------------------
 def wt_detokenizer(string):
-    # contractions
+    """
+    Detokenizes WikiText format text by handling contractions, numbers, punctuation, and brackets.
+    
+    Args:
+        string (str): Tokenized text to detokenize
+        
+    Returns:
+        str: Detokenized text
+    """
+    # Handle contractions
     string = string.replace("s '", "s'")
     string = re.sub(r"/' [0-9]/", r"/'[0-9]/", string)
-    # number separators
+    
+    # Handle number separators
     string = string.replace(" @-@ ", "-")
     string = string.replace(" @,@ ", ",")
     string = string.replace(" @.@ ", ".")
-    # punctuation
+    
+    # Handle punctuation
     string = string.replace(" : ", ": ")
     string = string.replace(" ; ", "; ")
     string = string.replace(" . ", ". ")
     string = string.replace(" ! ", "! ")
     string = string.replace(" ? ", "? ")
     string = string.replace(" , ", ", ")
-    # double brackets
+    
+    # Handle brackets and quotes
     string = re.sub(r"\(\s*([^\)]*?)\s*\)", r"(\1)", string)
     string = re.sub(r"\[\s*([^\]]*?)\s*\]", r"[\1]", string)
     string = re.sub(r"{\s*([^}]*?)\s*}", r"{\1}", string)
     string = re.sub(r"\"\s*([^\"]*?)\s*\"", r'"\1"', string)
     string = re.sub(r"'\s*([^']*?)\s*'", r"'\1'", string)
-    # miscellaneous
+    
+    # Handle miscellaneous cases
     string = string.replace("= = = =", "====")
     string = string.replace("= = =", "===")
     string = string.replace("= =", "==")
@@ -52,9 +82,19 @@ def wt_detokenizer(string):
     string = string.replace("\n ", "\n")
     string = string.replace(" N ", " 1 ")
     string = string.replace(" 's", "'s")
+    
     return string
 
 def ptb_detokenizer(x):
+    """
+    Detokenizes Penn Treebank format text.
+    
+    Args:
+        x (str): Tokenized text to detokenize
+        
+    Returns:
+        str: Detokenized text
+    """
     x = x.replace(" 's", "'s")
     x = x.replace("s ' ", "s' ")
     x = x.replace(" n't", "n't")
@@ -68,6 +108,15 @@ def ptb_detokenizer(x):
     return x
 
 def lm1b_detokenizer(x):
+    """
+    Detokenizes LM1B format text.
+    
+    Args:
+        x (str): Tokenized text to detokenize
+        
+    Returns:
+        str: Detokenized text
+    """
     x = x.replace('http : / / ', 'http://')
     x = x.replace('https : / / ', 'https://')
     x = re.sub(r' \'(\w+)', r"'\1", x)
@@ -89,34 +138,59 @@ def lm1b_detokenizer(x):
     x = x.replace('£ ', '£')
     return x
 
-
 def lambada_detokenizer(text):
-    text = text.replace("“", '"')
-    text = text.replace("”", '"')
+    """
+    Detokenizes LAMBADA format text.
+    
+    Args:
+        text (str): Tokenized text to detokenize
+        
+    Returns:
+        str: Detokenized text
+    """
+    text = text.replace(""", '"')
+    text = text.replace(""", '"')
     return '\n'+text.strip()
 
-
+# -------------------------------
+# Dataset Loading Functions
+# -------------------------------
 def get_lambada_test_dataset():
+    """
+    Loads the LAMBADA test dataset from OpenAI's servers.
+    
+    Returns:
+        Dataset: The LAMBADA test dataset
+    """
     url = "https://openaipublic.blob.core.windows.net/gpt-2/data/lambada_test.jsonl"
-
+    
     def read_jsonl_to_list(url):
         response = requests.get(url, stream=True)
         data_list = []
-
-        # Process each line in the response content
         for line in response.iter_lines(decode_unicode=True):
             if line:
                 data = json.loads(line)
                 data_list.append(data)
-
         return data_list
-
+    
     lambada_data = read_jsonl_to_list(url)
-    dataset = Dataset.from_list(lambada_data)
-    return dataset
-
+    return Dataset.from_list(lambada_data)
 
 def get_dataset(name, mode, cache_dir=None, block_size=1024, num_proc=8):
+    """
+    Loads and preprocesses a specified dataset.
+    
+    Args:
+        name (str): Name of the dataset to load
+        mode (str): Dataset split to load (train/validation/test)
+        cache_dir (str, optional): Directory to cache the dataset
+        block_size (int): Maximum sequence length
+        num_proc (int): Number of processes for parallel processing
+        
+    Returns:
+        Dataset: Preprocessed and tokenized dataset
+    """
+    # Load the appropriate dataset
     if name == "wikitext103":
         dataset = load_dataset("wikitext", name="wikitext-103-raw-v1", cache_dir=cache_dir)
     elif name == "wikitext2":
@@ -127,12 +201,11 @@ def get_dataset(name, mode, cache_dir=None, block_size=1024, num_proc=8):
         dataset = get_lambada_test_dataset()
     else:
         dataset = load_dataset(name, cache_dir=cache_dir)
-
-    if name == "lambada":
-        data = dataset
-    else:
-        data = dataset[mode]
-
+    
+    # Select the appropriate split
+    data = dataset[mode] if name != "lambada" else dataset
+    
+    # Select the appropriate detokenizer
     if name.startswith("wikitext"):
         detokenizer = wt_detokenizer
     elif name == "ptb":
@@ -143,80 +216,108 @@ def get_dataset(name, mode, cache_dir=None, block_size=1024, num_proc=8):
         detokenizer = lambada_detokenizer
     else:
         detokenizer = None
-
-    def _apply_detokenizer(detokenizer):
-        def detok(text):
-            for i, t in enumerate(text, 0):
-                 text[i] = detokenizer(t)
-            return text
-        return detok
-
+    
+    # Initialize tokenizer
     tokenizer = GPT2TokenizerFast.from_pretrained('gpt2')
     EOS = tokenizer.encode(tokenizer.eos_token)[0]
-
+    
     def preprocess_and_tokenize(example):
-        if name == "ptb":
-            text = example['sentence']
-        else:
-            text = example["text"]
-        # print(list(example.keys()))
-        # exit()
+        """Preprocesses and tokenizes a single example."""
+        text = example['sentence'] if name == "ptb" else example["text"]
         
         if detokenizer is not None:
-            text = _apply_detokenizer(detokenizer)(text)
-
+            text = detokenizer(text)
+        
         tokens = tokenizer(text, return_attention_mask=False)
-        # add in EOS token following 
-        # https://github.com/jcpeterson/openwebtext/blob/master/tokenize_text.py#L67
         for token in tokens['input_ids']:
             token.append(EOS)
         return tokens
     
-    tokenized_dataset = data.map(preprocess_and_tokenize, batched=True, num_proc=num_proc, load_from_cache_file=True)
+    # Process the dataset
+    tokenized_dataset = data.map(
+        preprocess_and_tokenize, 
+        batched=True, 
+        num_proc=num_proc, 
+        load_from_cache_file=True
+    )
+    
+    # Remove unnecessary columns
     if name == "ptb":
         tokenized_dataset = tokenized_dataset.remove_columns('sentence')
     else:
         tokenized_dataset = tokenized_dataset.remove_columns('text')
     
-
     def group_texts(examples):
-        # Concatenate all texts.
+        """Groups texts into blocks of specified size."""
         concatenated_examples = {k: list(chain(*examples[k])) for k in examples.keys()}
         total_length = len(concatenated_examples[list(examples.keys())[0]])
-        # We drop the small remainder, and if the total_length < block_size  we exclude this batch and return an empty dict.
-        # We could add padding if the model supported it instead of this drop, you can customize this part to your needs.
         total_length = (total_length // block_size) * block_size
-        # Split by chunks of max_len.
-        result = {
+        
+        return {
             k: [t[i : i + block_size] for i in range(0, total_length, block_size)]
             for k, t in concatenated_examples.items()
         }
-        return result
-
-    chunked_dataset = tokenized_dataset.map(group_texts, batched=True, num_proc=num_proc, load_from_cache_file=True)
+    
+    # Group texts and format for PyTorch
+    chunked_dataset = tokenized_dataset.map(
+        group_texts, 
+        batched=True, 
+        num_proc=num_proc, 
+        load_from_cache_file=True
+    )
     chunked_dataset = chunked_dataset.with_format('torch')
-
+    
     return chunked_dataset
 
-
 def get_dataloaders(config, distributed=True):
+    """
+    Creates training and validation dataloaders.
+    
+    Args:
+        config: Configuration object containing dataset and training parameters
+        distributed (bool): Whether to use distributed training
+        
+    Returns:
+        tuple: (train_loader, valid_loader)
+        
+    Raises:
+        ValueError: If batch sizes are not compatible with distributed training
+    """
+    # Validate batch sizes
     if config.training.batch_size % (config.ngpus * config.training.accum) != 0:
-            raise ValueError(f"Train Batch Size {config.training.batch_size} is not divisible by {config.ngpus} gpus with accumulation {config.training.accum}.")
+        raise ValueError(
+            f"Train Batch Size {config.training.batch_size} is not divisible by "
+            f"{config.ngpus} gpus with accumulation {config.training.accum}."
+        )
     if config.eval.batch_size % (config.ngpus * config.training.accum) != 0:
-        raise ValueError(f"Eval Batch Size for {config.eval.batch_size} is not divisible by {config.ngpus} gpus with accumulation {config.training.accum}.")
-
-
-    train_set = get_dataset(config.data.train, "train", cache_dir=config.data.cache_dir, block_size=config.model.length)
-    valid_set = get_dataset(config.data.valid, "validation" if config.data.valid != "text8" else "test", cache_dir=config.data.cache_dir, block_size=config.model.length)
-
+        raise ValueError(
+            f"Eval Batch Size {config.eval.batch_size} is not divisible by "
+            f"{config.ngpus} gpus with accumulation {config.training.accum}."
+        )
+    
+    # Load datasets
+    train_set = get_dataset(
+        config.data.train, 
+        "train", 
+        cache_dir=config.data.cache_dir, 
+        block_size=config.model.length
+    )
+    valid_set = get_dataset(
+        config.data.valid, 
+        "validation" if config.data.valid != "text8" else "test", 
+        cache_dir=config.data.cache_dir, 
+        block_size=config.model.length
+    )
+    
+    # Create samplers for distributed training
     if distributed:
-        train_sampler = DistributedSampler(train_set) 
+        train_sampler = DistributedSampler(train_set)
         test_sampler = DistributedSampler(valid_set)
     else:
         train_sampler = None
         test_sampler = None
     
-
+    # Create dataloaders
     train_loader = cycle_loader(DataLoader(
         train_set,
         batch_size=config.training.batch_size // (config.ngpus * config.training.accum),
@@ -226,6 +327,7 @@ def get_dataloaders(config, distributed=True):
         shuffle=(train_sampler is None),
         persistent_workers=True,
     ))
+    
     valid_loader = cycle_loader(DataLoader(
         valid_set,
         batch_size=config.eval.batch_size // (config.ngpus * config.training.accum),
@@ -234,5 +336,6 @@ def get_dataloaders(config, distributed=True):
         pin_memory=True,
         shuffle=(test_sampler is None),
     ))
+    
     return train_loader, valid_loader
 

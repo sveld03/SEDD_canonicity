@@ -1,3 +1,14 @@
+"""
+This script performs comprehensive analysis of the diffusion process, including:
+- Token sequence generation
+- Canonicity checking
+- Edit distance calculation
+- Perplexity computation
+- Token mapping analysis
+
+The results are saved to text files for further analysis.
+"""
+
 from transformers import GPT2TokenizerFast, AutoModelForCausalLM
 import torch
 import Levenshtein, tqdm, collections
@@ -16,22 +27,48 @@ device = torch.device('cuda:2')
 # model, graph, noise = load_model("louaaron/sedd-medium", device)
 tokenizer = GPT2TokenizerFast.from_pretrained("gpt2")
 
+# -------------------------------
+# Analysis Functions
+# -------------------------------
 def check_canonicity_one(actual_tokens, canonical_tokens):
+    """
+    Checks if a sequence of tokens is canonical by comparing with its canonical form.
+    
+    Args:
+        actual_tokens (torch.Tensor): The token sequence to check
+        canonical_tokens (torch.Tensor): The canonical form of the sequence
+        
+    Returns:
+        bool: True if the sequence is canonical, False otherwise
+    """
     if actual_tokens.numel() != canonical_tokens.numel():
         return False
-    if (actual_tokens == canonical_tokens).all():
-        return True
-    else:
-        return False
-    
+    return (actual_tokens == canonical_tokens).all()
+
 def rmst(X: list) -> list:
-    "Returns a new list without special tokens."
+    """
+    Removes special tokens from a sequence or list of sequences.
+    
+    Args:
+        X (list or torch.Tensor): Input sequence(s)
+        
+    Returns:
+        list: Sequence(s) with special tokens removed
+    """
     if np.issubdtype(type(X[0]), np.integer) or (len(X[0]) == 0):
         return [x for x in (X.numpy() if isinstance(X, torch.Tensor) else X) if x not in tokenizer.all_special_ids]
     return [[t for t in (x.numpy() if isinstance(x, torch.Tensor) else x) if t not in tokenizer.all_special_ids] for x in X]
 
-
 def dist_canon(X_tensor: torch.Tensor) -> np.ndarray:
+    """
+    Calculates the edit distance between a sequence and its canonical form.
+    
+    Args:
+        X_tensor (torch.Tensor): Input sequence
+        
+    Returns:
+        np.ndarray: Array of edit distances
+    """
     X = X_tensor.tolist()
     f = tokenizer.decode if isinstance(X[0], int) else tokenizer.batch_decode
     s = f(X, skip_special_tokens=True)
@@ -39,11 +76,30 @@ def dist_canon(X_tensor: torch.Tensor) -> np.ndarray:
     return np.array([Levenshtein.distance(k, o) for k, o in zip(K, O)])
 
 def canon(X: list) -> list:
+    """
+    Converts a sequence to its canonical form.
+    
+    Args:
+        X (list): Input sequence
+        
+    Returns:
+        list: Canonical form of the sequence
+    """
     f = tokenizer.decode if np.issubdtype(type(X[0]), np.integer) else tokenizer.batch_decode
     s = f(X, skip_special_tokens=False)
     return tokenizer(s, add_special_tokens=False)["input_ids"]
 
 def uncanons(V: list, V_canon: list = None) -> dict:
+    """
+    Identifies non-canonical token mappings in a sequence.
+    
+    Args:
+        V (list): Input sequence
+        V_canon (list, optional): Canonical form of the sequence
+        
+    Returns:
+        dict: Mapping of positions to non-canonical token pairs
+    """
     if isinstance(V[0], torch.Tensor): V = V.cpu().numpy()
     if V_canon is None: V_canon = canon(V)
     O, c = collections.defaultdict(list), 0
@@ -71,6 +127,10 @@ def uncanons(V: list, V_canon: list = None) -> dict:
     return O
 
 def do_it_all():
+    """
+    Performs comprehensive analysis of the diffusion process.
+    Generates samples, computes various metrics, and saves results to files.
+    """
     output_file = "TEST-1-30-doitall-optimized.txt"
     raw_file = "TEST-1-30-raw-doitall-optimized.txt"
 
@@ -164,6 +224,7 @@ def do_it_all():
             )
 
 def main():
+    """Main execution function."""
     start_time = datetime.now() 
 
     do_it_all()

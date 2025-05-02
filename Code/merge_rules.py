@@ -1,3 +1,5 @@
+# This script is from Renato's GitHub: https://github.com/RenatoGeh/tokenization
+
 import collections, multiprocessing, json, pathlib, math
 import bitarray, transformers, torch, numpy as np
 
